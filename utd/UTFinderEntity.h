@@ -16,6 +16,8 @@
 
 @property (copy, nonatomic) NSString *filePath;
 
+@property (readonly, nonatomic) BOOL isDirectory;
+
 @property (readonly, nonatomic) NSString *MIMEType;
 
 @end

@@ -22,6 +22,7 @@
     if (_filePath != filePath) {
         _filePath = filePath;
         _MIMEType = [self typeForPath:filePath];
+        [[NSFileManager defaultManager] fileExistsAtPath:filePath isDirectory:&_isDirectory];
     }
 }
 

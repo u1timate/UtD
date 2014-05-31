@@ -18,21 +18,23 @@
 
 - (void)viewDidLoad {
     
-    if (!_objects) {
-        _objects = [[NSMutableArray alloc] initWithCapacity:0];
-    }
-    
     [self.collectionView registerClass:[UTCollectionViewCell class] forCellWithReuseIdentifier:@"FinderCell"];
-}
-
-- (void)viewDidAppear:(BOOL)animated {
     
-    [self generateFilesInPath:[[NSBundle mainBundle] resourcePath]];
-    
-    [self.collectionView reloadData];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        [self generateFilesInPath:[[NSBundle mainBundle] resourcePath]];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.collectionView reloadData];
+        });
+    });
 }
 
 - (void)generateFilesInPath:(NSString *)path {
+    
+    if (!_objects || _objects.count > 0) {
+        _objects = [[NSMutableArray alloc] initWithCapacity:0];
+    }
+    
     NSFileManager *fileManager = [NSFileManager defaultManager];
     
     NSDirectoryEnumerator *e = [fileManager enumeratorAtPath:path];
@@ -69,8 +71,13 @@
     UTCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"FinderCell" forIndexPath:indexPath];
     
     if (indexPath.row == 0) {
-        cell.imageView.image = [UIImage imageNamed:@"Up"];
-        
+        NSString *path = [[[(UTFinderEntity *)[_objects lastObject] filePath] stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+        if ([path isEqualToString:@"/var/mobile/Applications"]) {
+            cell.imageView.image = [UIImage imageNamed:@"Up_Unavailable"];
+        } else {
+            cell.imageView.image = [UIImage imageNamed:@"Up"];
+        }
+        cell.textField.text = @"";
         return cell;
     } else {
     
@@ -83,7 +90,34 @@
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
-    NSLog(@"dd");
+    
+    if (indexPath.row == 0) {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSString *path = [[[(UTFinderEntity *)[_objects lastObject] filePath] stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
+            
+            if (![path isEqualToString:@"/var/mobile/Applications"]) {
+                [self generateFilesInPath:path];
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.collectionView reloadData];
+                });
+            }
+            
+        });
+    } else {
+        
+        BOOL isDir = [(UTFinderEntity *)_objects[indexPath.row - 1] isDirectory];
+        
+        if (isDir) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                [self generateFilesInPath:[(UTFinderEntity *)_objects[indexPath.row - 1] filePath]];
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.collectionView reloadData];
+                });
+            });
+        }
+    }
 }
 
 @end
