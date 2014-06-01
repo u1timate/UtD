@@ -14,6 +14,9 @@
 
 @implementation UTFinderCollectionController {
     NSMutableArray *_objects;
+    
+    NSString *_selectedItemPath;
+    
 }
 
 - (void)viewDidLoad {
@@ -21,7 +24,10 @@
     [self.collectionView registerClass:[UTCollectionViewCell class] forCellWithReuseIdentifier:@"FinderCell"];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [self generateFilesInPath:[[NSBundle mainBundle] resourcePath]];
+        
+        _selectedItemPath = [[NSBundle mainBundle] resourcePath];
+        
+        [self generateFilesInPath:_selectedItemPath];
         
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.collectionView reloadData];
@@ -71,8 +77,8 @@
     UTCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"FinderCell" forIndexPath:indexPath];
     
     if (indexPath.row == 0) {
-        NSString *path = [[[(UTFinderEntity *)[_objects lastObject] filePath] stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
-        if ([path isEqualToString:@"/var/mobile/Applications"]) {
+        
+        if ([[_selectedItemPath stringByDeletingLastPathComponent] isEqualToString:@"/var/mobile/Applications"]) {
             cell.imageView.image = [UIImage imageNamed:@"Up_Unavailable"];
         } else {
             cell.imageView.image = [UIImage imageNamed:@"Up"];
@@ -93,24 +99,29 @@
     
     if (indexPath.row == 0) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            NSString *path = [[[(UTFinderEntity *)[_objects lastObject] filePath] stringByDeletingLastPathComponent] stringByDeletingLastPathComponent];
             
-            if (![path isEqualToString:@"/var/mobile/Applications"]) {
-                [self generateFilesInPath:path];
+            if (![[_selectedItemPath stringByDeletingLastPathComponent] isEqualToString:@"/var/mobile/Applications"]) {
+                
+                _selectedItemPath = [_selectedItemPath stringByDeletingLastPathComponent];
+                
+                [self generateFilesInPath:_selectedItemPath];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self.collectionView reloadData];
                 });
             }
-            
         });
     } else {
         
         BOOL isDir = [(UTFinderEntity *)_objects[indexPath.row - 1] isDirectory];
         
         if (isDir) {
+            
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                [self generateFilesInPath:[(UTFinderEntity *)_objects[indexPath.row - 1] filePath]];
+                
+                _selectedItemPath = [(UTFinderEntity *)_objects[indexPath.row - 1] filePath];
+                
+                [self generateFilesInPath:_selectedItemPath];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self.collectionView reloadData];
