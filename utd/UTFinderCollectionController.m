@@ -12,6 +12,8 @@
 
 #import "UTCollectionViewCell.h"
 
+#import "MJRefresh.h"
+
 @implementation UTFinderCollectionController {
     NSMutableArray *_objects;
     
@@ -22,6 +24,9 @@
 - (void)viewDidLoad {
     
     [self.collectionView registerClass:[UTCollectionViewCell class] forCellWithReuseIdentifier:@"FinderCell"];
+    self.collectionView.alwaysBounceVertical = YES;
+    
+    [self addHeader];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
@@ -33,6 +38,23 @@
             [self.collectionView reloadData];
         });
     });
+}
+
+- (void)addHeader
+{
+    __unsafe_unretained typeof(self) vc = self;
+    // 添加下拉刷新头部控件
+    [self.collectionView addHeaderWithCallback:^{
+        // 进入刷新状态就会回调这个Block
+        
+        
+        // 模拟延迟加载数据，因此2秒后才调用）
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [vc.collectionView reloadData];
+            // 结束刷新
+            [vc.collectionView headerEndRefreshing];
+        });
+    }];
 }
 
 - (void)generateFilesInPath:(NSString *)path {
