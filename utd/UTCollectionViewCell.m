@@ -18,8 +18,6 @@
         
         [self.contentView addSubview:self.imageView];
         
-        
-        
         self.textField = [[UILabel alloc] initWithFrame:CGRectMake(0, self.bounds.size.height - 20, self.bounds.size.width, 18)];
         self.textField.textAlignment = NSTextAlignmentCenter;
         self.textField.font = [UIFont systemFontOfSize:14];
