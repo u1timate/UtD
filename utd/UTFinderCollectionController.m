@@ -16,17 +16,28 @@
 
 @implementation UTFinderCollectionController {
     NSMutableArray *_objects;
-    
     NSString *_selectedItemPath;
-    
+    UTFinderStyle _currentFinderStyle;
 }
 
 - (void)viewDidLoad {
     
-    [self.collectionView registerClass:[UTCollectionViewCell class] forCellWithReuseIdentifier:@"FinderCell"];
+    
     self.collectionView.alwaysBounceVertical = YES;
     
     [self addHeader];
+    
+    _currentFinderStyle = UTFinderTableStyle;
+    
+    switch (_currentFinderStyle) {
+        case UTFinderCollectionStyle:
+            [self.collectionView registerClass:[UTCollectionViewCell class] forCellWithReuseIdentifier:@"FinderCollectionCell"];
+            break;
+            
+        default:
+            [self.collectionView registerClass:[UTTableViewCell class] forCellWithReuseIdentifier:@"FinderTableCell"];
+            break;
+    }
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
@@ -43,16 +54,16 @@
 - (void)addHeader
 {
     __unsafe_unretained typeof(self) vc = self;
-    // 添加下拉刷新头部控件
+    
     [self.collectionView addHeaderWithCallback:^{
-        // 进入刷新状态就会回调这个Block
-        
-        
-        // 模拟延迟加载数据，因此2秒后才调用）
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            
             [vc.collectionView reloadData];
-            // 结束刷新
-            [vc.collectionView headerEndRefreshing];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                
+                [vc.collectionView headerEndRefreshing];
+                
+            });
         });
     }];
 }
@@ -79,12 +90,60 @@
     }
 }
 
+#pragma mark - IBAction
+
+- (IBAction)changeStyle:(id)sender {
+    _currentFinderStyle = [sender selectedSegmentIndex];
+    switch (_currentFinderStyle) {
+        case UTFinderCollectionStyle:
+            [self.collectionView registerClass:[UTCollectionViewCell class] forCellWithReuseIdentifier:@"FinderCollectionCell"];
+            break;
+            
+        default:
+            [self.collectionView registerClass:[UTTableViewCell class] forCellWithReuseIdentifier:@"FinderTableCell"];
+            break;
+    }
+    [self.collectionViewLayout invalidateLayout];
+    //[self.collectionView setCollectionViewLayout:self.collectionViewLayout animated:YES];
+    [self.collectionView headerBeginRefreshing];
+}
+
+#pragma mark - Collection View
+
 - (UICollectionViewLayout *)collectionViewLayout {
     UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
-    [flowLayout setItemSize:CGSizeMake(80, 100)];
+    if (_currentFinderStyle == UTFinderCollectionStyle) {
+        [flowLayout setItemSize:CGSizeMake(80, 100)];
+    } else {
+        [flowLayout setItemSize:CGSizeMake(320, 60)];
+    }
+    
     [flowLayout setScrollDirection:UICollectionViewScrollDirectionHorizontal];
+    flowLayout.minimumInteritemSpacing = 0;
+    flowLayout.minimumLineSpacing = 0;
+    switch (_currentFinderStyle) {
+        case UTFinderCollectionStyle:
+            flowLayout.itemSize = CGSizeMake(80, 100);
+            break;
+            
+        default:
+            flowLayout.itemSize = CGSizeMake(320, 60);
+            break;
+    }
     
     return flowLayout;
+}
+
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+    switch (_currentFinderStyle) {
+        case UTFinderCollectionStyle:
+            return CGSizeMake(80, 100);
+            break;
+            
+        default:
+            return CGSizeMake(320, 60);
+            break;
+    }
 }
 
 - (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
@@ -96,24 +155,51 @@
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
-    UTCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"FinderCell" forIndexPath:indexPath];
     
-    if (indexPath.row == 0) {
+    if (_currentFinderStyle == UTFinderCollectionStyle) {
+        UTCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"FinderCollectionCell" forIndexPath:indexPath];
         
-        if ([[_selectedItemPath stringByDeletingLastPathComponent] isEqualToString:@"/var/mobile/Applications"]) {
-            cell.imageView.image = [UIImage imageNamed:@"Up_Unavailable"];
+        if (indexPath.row == 0) {
+            
+            if ([[_selectedItemPath stringByDeletingLastPathComponent] isEqualToString:@"/var/mobile/Applications"]) {
+                cell.imageView.image = [UIImage imageNamed:@"Up_Unavailable"];
+            } else {
+                cell.imageView.image = [UIImage imageNamed:@"Up"];
+            }
+            cell.textField.text = @"";
+            return cell;
         } else {
-            cell.imageView.image = [UIImage imageNamed:@"Up"];
+            
+            cell.textField.text = [(UTFinderEntity *)_objects[indexPath.row - 1] fileName];
+            
+            cell.imageView.image = [UIImage imageNamed:@"Checkmark"];
+            
+            return cell;
         }
-        cell.textField.text = @"";
-        return cell;
+        
     } else {
-    
-        cell.textField.text = [(UTFinderEntity *)_objects[indexPath.row - 1] fileName];
+        UTTableViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"FinderTableCell" forIndexPath:indexPath];
         
-        cell.imageView.image = [UIImage imageNamed:@"Checkmark"];
-        
-        return cell;
+        if (indexPath.row == 0) {
+            
+            if ([[_selectedItemPath stringByDeletingLastPathComponent] isEqualToString:@"/var/mobile/Applications"]) {
+                cell.imageView.image = [UIImage imageNamed:@"Up_Unavailable"];
+            } else {
+                cell.imageView.image = [UIImage imageNamed:@"Up"];
+            }
+            cell.textField.text = NSLocalizedString(@"Up", nil);
+            cell.detailTextField.text = NSLocalizedString(@"Go Upper Directory...", nil);
+            return cell;
+        } else {
+            
+            cell.textField.text = [(UTFinderEntity *)_objects[indexPath.row - 1] fileName];
+            
+            cell.detailTextField.text = [(UTFinderEntity *)_objects[indexPath.row - 1] filePath];
+            
+            cell.imageView.image = [UIImage imageNamed:@"Checkmark"];
+            
+            return cell;
+        }
     }
 }
 

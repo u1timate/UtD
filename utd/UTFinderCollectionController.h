@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface UTFinderCollectionController : UICollectionViewController
+@interface UTFinderCollectionController : UICollectionViewController <UICollectionViewDelegateFlowLayout, UICollisionBehaviorDelegate>
 
 @end

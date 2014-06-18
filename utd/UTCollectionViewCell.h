@@ -14,6 +14,14 @@
 
 @property (strong, nonatomic) UILabel *textField;
 
+@end
+
+@interface UTTableViewCell : UICollectionViewCell
+
+@property (strong, nonatomic) UIImageView *imageView;
+
+@property (strong, nonatomic) UILabel *textField;
+
 @property (strong, nonatomic) UILabel *detailTextField;
 
 @end
