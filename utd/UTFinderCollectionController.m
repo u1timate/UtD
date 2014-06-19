@@ -27,10 +27,10 @@
     
     [self addHeader];
     
-    _currentFinderStyle = UTFinderTableStyle;
+    _currentFinderStyle = UTFinderLayoutTableStyle;
     
     switch (_currentFinderStyle) {
-        case UTFinderCollectionStyle:
+        case UTFinderLayoutCollectionStyle:
             [self.collectionView registerClass:[UTCollectionViewCell class] forCellWithReuseIdentifier:@"FinderCollectionCell"];
             break;
             
@@ -43,7 +43,7 @@
         
         _selectedItemPath = [[NSBundle mainBundle] resourcePath];
         
-        [self generateFilesInPath:_selectedItemPath];
+        _objects = [[UTFinderEntity generateFilesInPath:_selectedItemPath] mutableCopy];
         
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.collectionView reloadData];
@@ -68,34 +68,12 @@
     }];
 }
 
-- (void)generateFilesInPath:(NSString *)path {
-    
-    if (!_objects || _objects.count > 0) {
-        _objects = [[NSMutableArray alloc] initWithCapacity:0];
-    }
-    
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    
-    NSDirectoryEnumerator *e = [fileManager enumeratorAtPath:path];
-    
-    NSString *file;
-    
-    while (file = [e nextObject]) {
-        [e skipDescendants];
-        UTFinderEntity *entity = [[UTFinderEntity alloc] init];
-        entity.fileName = file;
-        entity.filePath = [path stringByAppendingFormat:@"/%@", file];
-        
-        [_objects addObject:entity];
-    }
-}
-
 #pragma mark - IBAction
 
 - (IBAction)changeStyle:(id)sender {
     _currentFinderStyle = [sender selectedSegmentIndex];
     switch (_currentFinderStyle) {
-        case UTFinderCollectionStyle:
+        case UTFinderLayoutCollectionStyle:
             [self.collectionView registerClass:[UTCollectionViewCell class] forCellWithReuseIdentifier:@"FinderCollectionCell"];
             break;
             
@@ -112,7 +90,7 @@
 
 - (UICollectionViewLayout *)collectionViewLayout {
     UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
-    if (_currentFinderStyle == UTFinderCollectionStyle) {
+    if (_currentFinderStyle == UTFinderLayoutCollectionStyle) {
         [flowLayout setItemSize:CGSizeMake(80, 100)];
     } else {
         [flowLayout setItemSize:CGSizeMake(320, 60)];
@@ -122,7 +100,7 @@
     flowLayout.minimumInteritemSpacing = 0;
     flowLayout.minimumLineSpacing = 0;
     switch (_currentFinderStyle) {
-        case UTFinderCollectionStyle:
+        case UTFinderLayoutCollectionStyle:
             flowLayout.itemSize = CGSizeMake(80, 100);
             break;
             
@@ -136,7 +114,7 @@
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
     switch (_currentFinderStyle) {
-        case UTFinderCollectionStyle:
+        case UTFinderLayoutCollectionStyle:
             return CGSizeMake(80, 100);
             break;
             
@@ -151,55 +129,54 @@
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    return _objects.count + 1;
+    return _objects.count;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     
-    if (_currentFinderStyle == UTFinderCollectionStyle) {
+    if (_currentFinderStyle == UTFinderLayoutCollectionStyle) {
         UTCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"FinderCollectionCell" forIndexPath:indexPath];
         
+        UTFinderEntity *entity = _objects[indexPath.row];
+        
         if (indexPath.row == 0) {
-            
+            cell.textField.text = @"";
+        } else {
+            cell.textField.text = entity.fileName;
+        }
+        
+        if (indexPath.row == 0) {
             if ([[_selectedItemPath stringByDeletingLastPathComponent] isEqualToString:@"/var/mobile/Applications"]) {
                 cell.imageView.image = [UIImage imageNamed:@"Up_Unavailable"];
             } else {
                 cell.imageView.image = [UIImage imageNamed:@"Up"];
             }
-            cell.textField.text = @"";
-            return cell;
         } else {
-            
-            cell.textField.text = [(UTFinderEntity *)_objects[indexPath.row - 1] fileName];
-            
-            cell.imageView.image = [UIImage imageNamed:@"Checkmark"];
-            
-            return cell;
+            cell.imageView.image = entity.typeImage;
         }
+        
+        return cell;
         
     } else {
         UTTableViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"FinderTableCell" forIndexPath:indexPath];
         
+        UTFinderEntity *entity = _objects[indexPath.row];
+        
+        cell.textField.text = entity.fileName;
+
+        cell.detailTextField.text = entity.fileAttrs;
+        
         if (indexPath.row == 0) {
-            
             if ([[_selectedItemPath stringByDeletingLastPathComponent] isEqualToString:@"/var/mobile/Applications"]) {
                 cell.imageView.image = [UIImage imageNamed:@"Up_Unavailable"];
             } else {
                 cell.imageView.image = [UIImage imageNamed:@"Up"];
             }
-            cell.textField.text = NSLocalizedString(@"Up", nil);
-            cell.detailTextField.text = NSLocalizedString(@"Go Upper Directory...", nil);
-            return cell;
         } else {
-            
-            cell.textField.text = [(UTFinderEntity *)_objects[indexPath.row - 1] fileName];
-            
-            cell.detailTextField.text = [(UTFinderEntity *)_objects[indexPath.row - 1] filePath];
-            
-            cell.imageView.image = [UIImage imageNamed:@"Checkmark"];
-            
-            return cell;
+            cell.imageView.image = entity.typeImage;
         }
+        
+        return cell;
     }
 }
 
@@ -212,7 +189,7 @@
                 
                 _selectedItemPath = [_selectedItemPath stringByDeletingLastPathComponent];
                 
-                [self generateFilesInPath:_selectedItemPath];
+                _objects = [[UTFinderEntity generateFilesInPath:_selectedItemPath] mutableCopy];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self.collectionView reloadData];
@@ -221,15 +198,13 @@
         });
     } else {
         
-        BOOL isDir = [(UTFinderEntity *)_objects[indexPath.row - 1] isDirectory];
-        
-        if (isDir) {
+        if ([(UTFinderEntity *)_objects[indexPath.row] type] == UTFinderFolderType) {
             
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 
                 _selectedItemPath = [(UTFinderEntity *)_objects[indexPath.row - 1] filePath];
                 
-                [self generateFilesInPath:_selectedItemPath];
+                _objects = [[UTFinderEntity generateFilesInPath:_selectedItemPath] mutableCopy];
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self.collectionView reloadData];

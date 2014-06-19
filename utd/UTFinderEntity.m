@@ -10,31 +10,98 @@
 
 @implementation UTFinderEntity
 
-- (id)init {
-    if (self = [super init]) {
-        self.fileName = @"NULL";
-        self.filePath = @"NULL";
-    }
-    return self;
-}
-
 - (void)setFilePath:(NSString *)filePath {
     if (_filePath != filePath) {
         _filePath = filePath;
-        _MIMEType = [self typeForPath:filePath];
-        [[NSFileManager defaultManager] fileExistsAtPath:filePath isDirectory:&_isDirectory];
+        _type = [self typeForPath:filePath];
+        _typeImage = [self imageForUTType:_type];
     }
 }
 
-- (NSString *)typeForPath:(NSString *)filePath {
-    CFStringRef fileExtension = (__bridge CFStringRef)[filePath pathExtension];
+- (UIImage *)imageForUTType:(UTFinderFileType)type {
+    switch (type) {
+            
+        case UTFinderGoUpType:
+            return [UIImage imageNamed:@"Up"];
+            break;
+            
+        case UTFinderFolderType:
+            return [UIImage imageNamed:@"folder"];
+            break;
+            
+        case UTFinderImageType:
+            return [UIImage imageNamed:@"images"];
+            break;
+            
+        case UTFinderAudioType:
+            return [UIImage imageNamed:@"music"];
+            break;
+            
+        case UTFinderMovieType:
+            return [UIImage imageNamed:@"movie"];
+            break;
+        
+        case UTFinderTextType:
+            return [UIImage imageNamed:@"text"];
+            
+        default:
+            return [UIImage imageNamed:@"unknown"];
+            break;
+    }
+}
+
+- (UTFinderFileType)typeForPath:(NSString *)path{
     
-    CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, fileExtension, NULL);
-    CFStringRef MIMEType = UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType);
-    CFRelease(UTI);
-    NSString *MIMETypeString = (__bridge_transfer NSString *)MIMEType;
+    if ([path isEqualToString:@"Up"]) {
+        return UTFinderGoUpType;
+    }
     
-    return MIMETypeString;
+    BOOL isDirectory;
+    [[NSFileManager defaultManager] fileExistsAtPath:path isDirectory:&isDirectory];
+        
+    if (isDirectory) {
+        return UTFinderFolderType;
+    } else {
+        
+        CFStringRef fileExtension = (__bridge CFStringRef) [path pathExtension];
+        
+        CFStringRef fileUTI =  UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, fileExtension, NULL);
+        
+        if (UTTypeConformsTo(fileUTI, kUTTypeImage)) return UTFinderImageType;
+        else if (UTTypeConformsTo(fileUTI, kUTTypeAudio)) return UTFinderAudioType;
+        else if (UTTypeConformsTo(fileUTI, kUTTypeText)) return UTFinderTextType;
+        else if (UTTypeConformsTo(fileUTI, kUTTypeMovie)) return UTFinderMovieType;
+        else return UTFinderUnknownType;
+    }
+}
+
++ (NSArray *)generateFilesInPath:(NSString *)path {
+    
+    NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:0];
+    
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    NSDirectoryEnumerator *e = [fileManager enumeratorAtPath:path];
+    
+    NSString *file;
+    
+    UTFinderEntity *upEntity = [[UTFinderEntity alloc] init];
+    upEntity.fileName = NSLocalizedString(@"Up", nil);
+    upEntity.filePath = @"Up";
+    upEntity.fileAttrs = NSLocalizedString(@"Go Upper Directory...", nil);
+    
+    [array addObject:upEntity];
+    
+    while (file = [e nextObject]) {
+        [e skipDescendants];
+        UTFinderEntity *entity = [[UTFinderEntity alloc] init];
+        entity.fileName = file;
+        entity.filePath = [path stringByAppendingFormat:@"/%@", file];
+#warning 后面要改成显示文件修改时间等信息
+        entity.fileAttrs = @"Some Attributes";
+        [array addObject:entity];
+    }
+    return array;
 }
 
 @end

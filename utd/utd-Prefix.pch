@@ -16,6 +16,16 @@
 #endif
 
 typedef enum {
-    UTFinderTableStyle = 0,
-    UTFinderCollectionStyle = 1
+    UTFinderLayoutTableStyle = 0,
+    UTFinderLayoutCollectionStyle = 1
 } UTFinderStyle;
+
+typedef enum {
+    UTFinderGoUpType = 0,
+    UTFinderUnknownType = 1,
+    UTFinderFolderType = 2,
+    UTFinderImageType = 3,
+    UTFinderAudioType = 4,
+    UTFinderMovieType = 5,
+    UTFinderTextType = 6
+} UTFinderFileType;

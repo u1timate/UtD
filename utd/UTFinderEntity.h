@@ -14,10 +14,14 @@
 
 @property (copy, nonatomic) NSString *fileName;
 
+@property (copy, nonatomic) NSString *fileAttrs;
+
 @property (copy, nonatomic) NSString *filePath;
 
-@property (readonly, nonatomic) BOOL isDirectory;
+@property (readonly, nonatomic) UTFinderFileType type;
 
-@property (readonly, nonatomic) NSString *MIMEType;
+@property (readonly, nonatomic) UIImage *typeImage;
+
++ (NSArray *)generateFilesInPath:(NSString *)path;
 
 @end
