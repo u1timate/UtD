@@ -14,8 +14,10 @@
 
 #import "MJRefresh.h"
 
+
 @implementation UTFinderCollectionController {
     NSMutableArray *_objects;
+    NSMutableArray *_photos;
     NSString *_selectedItemPath;
     UTFinderStyle _currentFinderStyle;
 }
@@ -153,6 +155,12 @@
             }
         } else {
             cell.imageView.image = entity.typeImage;
+            
+            if (entity.type ==  UTFinderImageType) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    cell.imageView.image = [UTFinderEntity thumbForImageAtPath:entity.filePath destinationSize:CGSizeMake(70, 70)];
+                });
+            }
         }
         
         return cell;
@@ -174,6 +182,12 @@
             }
         } else {
             cell.imageView.image = entity.typeImage;
+            
+            if (entity.type ==  UTFinderImageType) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    cell.imageView.image = [UTFinderEntity thumbForImageAtPath:entity.filePath destinationSize:CGSizeMake(50, 50)];
+                });
+            }
         }
         
         return cell;
@@ -198,11 +212,13 @@
         });
     } else {
         
-        if ([(UTFinderEntity *)_objects[indexPath.row] type] == UTFinderFolderType) {
+        UTFinderFileType fileType = [(UTFinderEntity *)_objects[indexPath.row] type];
+        
+        if (fileType == UTFinderFolderType) {
             
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 
-                _selectedItemPath = [(UTFinderEntity *)_objects[indexPath.row - 1] filePath];
+                _selectedItemPath = [(UTFinderEntity *)_objects[indexPath.row] filePath];
                 
                 _objects = [[UTFinderEntity generateFilesInPath:_selectedItemPath] mutableCopy];
                 
@@ -210,8 +226,63 @@
                     [self.collectionView reloadData];
                 });
             });
+        } else if (fileType == UTFinderImageType) {
+            _photos = [[NSMutableArray alloc] initWithCapacity:0];
+            NSMutableArray *paths = [[NSMutableArray alloc] initWithCapacity:0];
+            
+            NSString *curPath = [(UTFinderEntity *)_objects[indexPath.row] filePath];
+            
+            for (UTFinderEntity *entity in _objects) {
+                if (entity.type == UTFinderImageType) {
+                    [paths addObject:entity.filePath];
+                    
+                    MWPhoto *photo = [MWPhoto photoWithURL:[NSURL fileURLWithPath:entity.filePath]];
+                    photo.caption = [[entity.filePath componentsSeparatedByString:@"/"] lastObject];
+                    
+                    [_photos addObject:photo];
+                    
+                }
+            }
+            
+            // Create browser
+            MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
+            browser.displayActionButton = YES;
+            browser.displayNavArrows = NO;
+            browser.displaySelectionButtons = NO;
+            browser.alwaysShowControls = NO;
+            browser.zoomPhotosToFill = YES;
+#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
+            browser.wantsFullScreenLayout = YES;
+#endif
+            browser.enableGrid = NO;
+            browser.startOnGrid = NO;
+            browser.enableSwipeToDismiss = NO;
+            [browser setCurrentPhotoIndex:[paths indexOfObject:curPath]];
+            
+            UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:browser];
+            nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+            [self presentViewController:nc animated:YES completion:nil];
+            
         }
     }
+}
+
+#pragma mark - MWPhotoBrowser Delegate
+
+- (NSUInteger)numberOfPhotosInPhotoBrowser:(MWPhotoBrowser *)photoBrowser {
+    return _photos.count;
+}
+
+- (id <MWPhoto>)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index {
+    if (index < _photos.count)
+        return [_photos objectAtIndex:index];
+    return nil;
+}
+
+- (void)photoBrowserDidFinishModalPresentation:(MWPhotoBrowser *)photoBrowser {
+    // If we subscribe to this method we must dismiss the view controller ourselves
+    NSLog(@"Did finish modal presentation");
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 @end

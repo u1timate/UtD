@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
-@interface UTFinderCollectionController : UICollectionViewController <UICollectionViewDelegateFlowLayout, UICollisionBehaviorDelegate>
+#import "MWPhotoBrowser.h"
+
+@interface UTFinderCollectionController : UICollectionViewController <UICollectionViewDelegateFlowLayout, MWPhotoBrowserDelegate>
 
 @end

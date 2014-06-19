@@ -104,4 +104,14 @@
     return array;
 }
 
++ (UIImage *)thumbForImageAtPath:(NSString *)path destinationSize:(CGSize)size {
+    UIImage *originalImage = [[UIImage alloc] initWithContentsOfFile:path];
+    CGSize destinationSize = size;
+    UIGraphicsBeginImageContext(destinationSize);
+    [originalImage drawInRect:CGRectMake(0,0,destinationSize.width,destinationSize.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
+}
+
 @end
