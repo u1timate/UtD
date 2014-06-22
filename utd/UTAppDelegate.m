@@ -12,8 +12,13 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    // Override point for customization after application launch.
-    return YES;
+    NSURL *url = [launchOptions objectForKey:UIApplicationLaunchOptionsURLKey];
+    if(url) {
+        if ([[url scheme] isEqualToString:@"drop"]) {
+#warning 还没想好要干嘛－ －，先加在这里
+        }
+    }
+ return YES;
 }
 							
 - (void)applicationWillResignActive:(UIApplication *)application
