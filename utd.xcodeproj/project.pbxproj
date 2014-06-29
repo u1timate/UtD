@@ -25,6 +25,7 @@
 		3B1EA66E1938DFEE001D4327 /* UTFinderEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1EA66D1938DFEE001D4327 /* UTFinderEntity.m */; };
 		3B5718F1195E876A00978A43 /* UITabBarController+UTTabBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B5718F0195E876A00978A43 /* UITabBarController+UTTabBarController.m */; };
 		3B571904195EEAA800978A43 /* UTAlertViewDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B571903195EEAA800978A43 /* UTAlertViewDelegate.m */; };
+		3B8FB2AB1960306300DBC96E /* LGViewHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B8FB2AA1960306300DBC96E /* LGViewHUD.m */; };
 		3B987AC1193B3EB300776045 /* MJRefreshBaseView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B987AB4193B3EB300776045 /* MJRefreshBaseView.m */; };
 		3B987AC2193B3EB300776045 /* MJRefreshConst.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B987AB6193B3EB300776045 /* MJRefreshConst.m */; };
 		3B987AC3193B3EB300776045 /* MJRefreshFooterView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B987AB8193B3EB300776045 /* MJRefreshFooterView.m */; };
@@ -116,6 +117,8 @@
 		3B5718F0195E876A00978A43 /* UITabBarController+UTTabBarController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UITabBarController+UTTabBarController.m"; sourceTree = "<group>"; };
 		3B571902195EEAA800978A43 /* UTAlertViewDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTAlertViewDelegate.h; sourceTree = "<group>"; };
 		3B571903195EEAA800978A43 /* UTAlertViewDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTAlertViewDelegate.m; sourceTree = "<group>"; };
+		3B8FB2A91960306300DBC96E /* LGViewHUD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LGViewHUD.h; sourceTree = "<group>"; };
+		3B8FB2AA1960306300DBC96E /* LGViewHUD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LGViewHUD.m; sourceTree = "<group>"; };
 		3B987AB2193B3EB300776045 /* MJRefresh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MJRefresh.h; path = Refresh/MJRefresh.h; sourceTree = "<group>"; };
 		3B987AB3193B3EB300776045 /* MJRefreshBaseView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MJRefreshBaseView.h; path = Refresh/MJRefreshBaseView.h; sourceTree = "<group>"; };
 		3B987AB4193B3EB300776045 /* MJRefreshBaseView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MJRefreshBaseView.m; path = Refresh/MJRefreshBaseView.m; sourceTree = "<group>"; };
@@ -281,6 +284,7 @@
 		3B1EA6361938DBDA001D4327 /* utd */ = {
 			isa = PBXGroup;
 			children = (
+				3B8FB2A81960305A00DBC96E /* HUD */,
 				3BBC27C01951D1CE006AD56B /* MWPhotoBrowser */,
 				3B987AB1193B3E7800776045 /* Refresh */,
 				3B1EA6651938DC57001D4327 /* FinderController */,
@@ -345,6 +349,15 @@
 				3B571903195EEAA800978A43 /* UTAlertViewDelegate.m */,
 			);
 			name = UTClass;
+			sourceTree = "<group>";
+		};
+		3B8FB2A81960305A00DBC96E /* HUD */ = {
+			isa = PBXGroup;
+			children = (
+				3B8FB2A91960306300DBC96E /* LGViewHUD.h */,
+				3B8FB2AA1960306300DBC96E /* LGViewHUD.m */,
+			);
+			name = HUD;
 			sourceTree = "<group>";
 		};
 		3B987AB1193B3E7800776045 /* Refresh */ = {
@@ -630,6 +643,7 @@
 				3BBC28311951D1CE006AD56B /* PSTCollectionViewController.m in Sources */,
 				3B987AC3193B3EB300776045 /* MJRefreshFooterView.m in Sources */,
 				3BBC28251951D1CE006AD56B /* MWGridViewController.m in Sources */,
+				3B8FB2AB1960306300DBC96E /* LGViewHUD.m in Sources */,
 				3BBC28261951D1CE006AD56B /* MWPhoto.m in Sources */,
 				3BBC28271951D1CE006AD56B /* MWPhotoBrowser.m in Sources */,
 				3BBC284B1951D1CE006AD56B /* UIImageView+UIActivityIndicatorForSDWebImage.m in Sources */,

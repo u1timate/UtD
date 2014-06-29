@@ -18,6 +18,8 @@
 
 #import "UTAlertViewDelegate.h"
 
+#import "LGViewHUD.h"
+
 @interface UTFinderCollectionController ()
 
 @property (strong, nonatomic) UISegmentedControl *segment;
@@ -45,12 +47,12 @@ typedef enum {
     NSMutableArray *_photos;
     NSMutableArray *_dirImages;
     NSMutableArray *_selectedItems;
+    NSMutableArray *_selectedItemsFilePaths;
     NSString *_selectedItemPath;
     NSString *_documentPath;
     UTFinderStyle _currentFinderStyle;
     UTActionIdentifier _action;
     BOOL _isEditing;
-    BOOL _lockEditingForAction;
 }
 
 - (void)viewDidLoad {
@@ -64,14 +66,15 @@ typedef enum {
     [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/Up.png"] toPath:[_documentPath stringByAppendingString:@"/Up.png"] error:nil];
     
     
-    
-    
     self.collectionView.alwaysBounceVertical = YES;
     
-    self.navigationItem.rightBarButtonItem = self.editButtonItem;
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDirectory:)];
+    UIBarButtonItem *barButton = [[UIBarButtonItem alloc] init];
+    barButton.title = NSLocalizedString(@"Edit", nil);
+    barButton.target = self;
+    barButton.action = @selector(setFinderEditing:);
+    self.navigationItem.rightBarButtonItem = barButton;
     
-    _lockEditingForAction = NO;
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDirectory:)];
     
     [self layoutTitleViewForSegment:YES];
     
@@ -81,6 +84,7 @@ typedef enum {
     _objects = [NSMutableArray array];
     _photos = [NSMutableArray array];
     _selectedItems = [NSMutableArray array];
+    _selectedItemsFilePaths = [NSMutableArray array];
     
     _currentFinderStyle = UTFinderLayoutTableStyle;
     
@@ -124,6 +128,7 @@ typedef enum {
 }
 
 - (void)goUpperDirectory {
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
         if (![[_selectedItemPath stringByDeletingLastPathComponent] isEqualToString:@"/var/mobile/Applications"]) {
@@ -148,8 +153,7 @@ typedef enum {
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.collectionView headerEndRefreshing];
-                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"There is no more upper directory.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
-                [alert show];
+                [self showHudWithMessage:NSLocalizedString(@"No More Upper Directories", nil) iconName:@"operation_failed" progressIndicator:NO];
             });
         }
     });
@@ -232,17 +236,19 @@ typedef enum {
     return flowLayout;
 }
 
-- (void)setEditing:(BOOL)editing animated:(BOOL)animated {
+- (void)setFinderEditing:(id)sender {
     
-    if (![[[_selectedItemPath componentsSeparatedByString:@"/"] lastObject] isEqualToString:@"Documents"]) {
+    NSString *path = [[[[NSBundle mainBundle] resourcePath] stringByDeletingLastPathComponent] stringByAppendingString:@"/Documents"];
+    
+    if ([_selectedItemPath rangeOfString:path].location == NSNotFound) {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"Operating on application bundle file is prohibited.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
         [alert show];
         return;
     }
     
-    [super setEditing:editing animated:animated];
+    _isEditing = !_isEditing;
     
-	if (editing) {
+	if (_isEditing) {
         
         self.navigationItem.rightBarButtonItem.title = NSLocalizedString(@"Cancel", nil);
         
@@ -276,6 +282,7 @@ typedef enum {
 		[self.tabBarController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_editingToolbar(==44.0)]|" options:kNilOptions metrics:nil views:views]];
         
 		_selectedItems = [NSMutableArray array];
+        _selectedItemsFilePaths = [NSMutableArray array];
         [(UIBarButtonItem *)_editingToolbar.items[0] setEnabled:NO];
         [(UIBarButtonItem *)_editingToolbar.items[2] setEnabled:NO];
         [(UIBarButtonItem *)_editingToolbar.items[4] setEnabled:NO];
@@ -284,19 +291,20 @@ typedef enum {
 		_editingToolbar.delegate = self;
         
 	} else {
-        if (!_lockEditingForAction) {
-            self.navigationItem.rightBarButtonItem.title = NSLocalizedString(@"Edit", nil);
-            [self.tabBarController showTabBarAnimated:NO];
-            [_editingToolbar removeFromSuperview];
-            [self layoutTitleViewForSegment:YES];
-            
-            _editingToolbar = nil;
-            _selectedItems = nil;
-        }
+        self.navigationItem.rightBarButtonItem.title = NSLocalizedString(@"Edit", nil);
+        
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDirectory:)];
+        [self.tabBarController showTabBarAnimated:NO];
+        [_editingToolbar removeFromSuperview];
+        [self layoutTitleViewForSegment:YES];
+        
+        _editingToolbar = nil;
+        _selectedItems = nil;
+        _selectedItemsFilePaths = nil;
 	}
     
-    [self updateEditStatus:editing];
-    
+    [self updateEditStatus:_isEditing];
+    [self layoutTitleViewForSegment:!_isEditing];
 }
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
@@ -425,8 +433,10 @@ typedef enum {
     
     if ([sender isSelected]) {
         [_selectedItems addObject:[NSNumber numberWithInteger:index]];
+        [_selectedItemsFilePaths addObject:[[_objects objectAtIndex:index] filePath]];
     } else {
         [_selectedItems removeObject:[NSNumber numberWithInteger:index]];
+        [_selectedItemsFilePaths removeObject:[[_objects objectAtIndex:index] filePath]];
     }
     
     NSUInteger count = [_selectedItems count];
@@ -502,8 +512,10 @@ typedef enum {
         cell.button.selected = !cell.button.selected;
         if ([cell.button isSelected]) {
             [_selectedItems addObject:[NSNumber numberWithInteger:indexPath.row]];
+            [_selectedItemsFilePaths addObject:[[_objects objectAtIndex:indexPath.row] filePath]];
         } else {
             [_selectedItems removeObject:[NSNumber numberWithInteger:indexPath.row]];
+            [_selectedItemsFilePaths removeObject:[[_objects objectAtIndex:indexPath.row] filePath]];
         }
         
         NSUInteger count = [_selectedItems count];
@@ -536,6 +548,18 @@ BOOL checkReachableAtPath(NSString *path) {
     NSURL *url = [NSURL fileURLWithPath:path];
     int a = [url checkResourceIsReachableAndReturnError:nil];
     return a;
+}
+
+- (void)showHudWithMessage:(NSString *)message iconName:(NSString *)name progressIndicator:(BOOL)indicator {
+    LGViewHUD *hud = [LGViewHUD defaultHUD];
+    hud.bottomText = message;
+    [hud showInView:self.view];
+    
+    if (name) {
+        hud.image = [UIImage imageNamed:name];
+    }
+    
+    hud.activityIndicatorOn = indicator;
 }
 
 #pragma mark Toolbar Edit
@@ -607,6 +631,170 @@ BOOL checkReachableAtPath(NSString *path) {
 }
 
 - (void)renameItems:(id)sender {
+    [self renameBatch];
+}
+
+- (void)operateItems:(id)sender action:(UTActionIdentifier)action {
+    
+    if (![[sender title] isEqualToString:NSLocalizedString(@"Put", nil)]) {
+        [sender setTitle:NSLocalizedString(@"Put", nil)];
+        _textLabel.text = NSLocalizedString(@"Choose Destination", nil);
+        
+        _isEditing = NO;
+        
+        [self.collectionView reloadItemsAtIndexPaths:[self.collectionView indexPathsForVisibleItems]];
+        
+        switch (action) {
+            case UTActionMove:
+                [(UIBarButtonItem *)_editingToolbar.items[0] setEnabled:NO];
+                [(UIBarButtonItem *)_editingToolbar.items[4] setEnabled:NO];
+                [(UIBarButtonItem *)_editingToolbar.items[6] setEnabled:NO];
+                break;
+                
+            case UTActionCopy:
+                [(UIBarButtonItem *)_editingToolbar.items[0] setEnabled:NO];
+                [(UIBarButtonItem *)_editingToolbar.items[2] setEnabled:NO];
+                [(UIBarButtonItem *)_editingToolbar.items[6] setEnabled:NO];
+                break;
+                
+            default:
+                break;
+        }
+    } else {
+        
+        NSString *text = @"";
+        
+        if (action == UTActionMove) {
+            text = NSLocalizedString(@"move", nil);
+        } else if (action == UTActionCopy) {
+            text = NSLocalizedString(@"copy", nil);
+        }
+        
+        UIActionSheet *sheet = [[UIActionSheet alloc] init];
+        if (_selectedItems.count > 1) {
+            sheet.title = [NSString stringWithFormat:NSLocalizedString(@"Do you want to %@ %lu selected items?", nil), text, _selectedItems.count];
+        } else {
+            sheet.title = [NSString stringWithFormat:NSLocalizedString(@"Do you want to %@ %lu selected item?", nil), text, _selectedItems.count];
+        }
+        
+        sheet.delegate = self;
+        sheet.actionSheetStyle = UIActionSheetStyleDefault;
+        
+        [sheet addButtonWithTitle:[[[text substringToIndex:1] uppercaseString] stringByAppendingString:[text substringFromIndex:1]]];
+        [sheet addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
+        
+        sheet.cancelButtonIndex = 1;
+        
+        [sheet showFromToolbar:_editingToolbar];
+    }
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (buttonIndex != actionSheet.cancelButtonIndex) {
+        __block NSError *error;
+        switch (_action) {
+            case UTActionDelete: {
+                
+                LGViewHUD *hud = [LGViewHUD defaultHUD];
+                hud.bottomText = NSLocalizedString(@"Deleting Files", nil);
+                [hud showInView:self.view];
+                hud.activityIndicatorOn = YES;
+                
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                    NSMutableArray *indexpaths = [NSMutableArray array];
+                    NSMutableArray *objs = [NSMutableArray array];
+                    for (NSNumber *index in _selectedItems) {
+                        UTFinderEntity *entity = _objects[index.integerValue];
+                        [objs addObject:entity];
+                        [indexpaths addObject:[NSIndexPath indexPathForRow:index.integerValue inSection:0]];
+                    }
+                    
+                    for (UTFinderEntity *entity in objs) {
+                        if (checkReachableAtPath(entity.filePath)) {
+                            [[NSFileManager defaultManager] removeItemAtPath:entity.filePath error:&error];
+                            if (error) {
+                                NSLog(@"%@", error);
+                                break;
+                            }
+                            [_objects removeObject:entity];
+                            
+                        }
+                    }
+                    
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self.collectionView deleteItemsAtIndexPaths:indexpaths];
+                        [self setFinderEditing:NO];
+                        [hud hideWithAnimation:HUDAnimationNone];
+                        //[self showHudWithMessage:NSLocalizedString(@"Deleted", nil) iconName:@"operation_done" progressIndicator:NO];
+                    });
+                    
+                });
+                break;
+            }
+                
+            case UTActionMove: {
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                    
+                    LGViewHUD *hud = [LGViewHUD defaultHUD];
+                    hud.bottomText = NSLocalizedString(@"Moving Files", nil);
+                    [hud showInView:self.view];
+                    hud.activityIndicatorOn = YES;
+                    
+                    for (NSString *filePath in _selectedItemsFilePaths) {
+                        NSString *fileName = [[filePath componentsSeparatedByString:@"/"] lastObject];
+                        [[NSFileManager defaultManager] moveItemAtPath:filePath toPath:[_selectedItemPath stringByAppendingFormat:@"/%@", fileName] error:&error];
+                        if (error) {
+                            NSLog(@"%@", error);
+                            break;
+                        }
+                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self setFinderEditing:NO];
+                        [hud hideWithAnimation:HUDAnimationNone];
+                        //[self showHudWithMessage:NSLocalizedString(@"Moved", nil) iconName:@"operation_done" progressIndicator:NO];
+                    });
+                });
+                break;
+            }
+                
+            case UTActionCopy: {
+                
+                LGViewHUD *hud = [LGViewHUD defaultHUD];
+                hud.bottomText = NSLocalizedString(@"Copying Files", nil);
+                [hud showInView:self.view];
+                hud.activityIndicatorOn = YES;
+                
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                    for (NSString *filePath in _selectedItemsFilePaths) {
+                        NSString *fileName = [[filePath componentsSeparatedByString:@"/"] lastObject];
+                        [[NSFileManager defaultManager] copyItemAtPath:filePath toPath:[_selectedItemPath stringByAppendingFormat:@"/%@", fileName] error:&error];
+                        if (error) {
+                            NSLog(@"%@", error);
+                            break;
+                        }
+                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self setFinderEditing:NO];
+                        [hud hideWithAnimation:HUDAnimationNone];
+                        [self showHudWithMessage:NSLocalizedString(@"Moved", nil) iconName:@"operation_done" progressIndicator:NO];
+                    });
+                });
+                break;
+            }
+            default:
+                break;
+                
+        }
+        if (error) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"Something goes wrong when perform file action. Please check permission or contact us.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
+            [alert show];
+        }
+    }
+}
+
+#pragma mark - IAP Methods
+
+- (void)renameBatch {
     UIAlertView *alertview = [[UIAlertView alloc] init];
     alertview.alertViewStyle = UIAlertViewStylePlainTextInput;
     alertview.message = NSLocalizedString(@"Please input new name (Multiple file rename rules please refer to help documents)", nil);
@@ -628,6 +816,7 @@ BOOL checkReachableAtPath(NSString *path) {
                     
                     entity.filePath = newPath;
                     entity.fileName = newDir;
+#warning 获取新文件的属性
                     entity.fileAttrs = @"Some New Attrs";
                     
                     if (error) {
@@ -674,6 +863,7 @@ BOOL checkReachableAtPath(NSString *path) {
                     
                     entity.filePath = newPath;
                     entity.fileName = newDir;
+#warning 获取新文件的属性
                     entity.fileAttrs = @"Some New Attributes";
                     
                     if (error) {
@@ -687,121 +877,17 @@ BOOL checkReachableAtPath(NSString *path) {
                 UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"Something goes wrong when perform file action. Please check permission or contact us.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
                 [alert show];
             }
-            [self setEditing:NO];
+            
+            
+            
+            [self setFinderEditing:NO];
             
             [self.collectionView reloadItemsAtIndexPaths:[self.collectionView indexPathsForVisibleItems]];
+            
+            [self showHudWithMessage:NSLocalizedString(@"Renamed", nil) iconName:@"operation_done" progressIndicator:NO];
         }
     }];
-
 }
-
-- (void)operateItems:(id)sender action:(UTActionIdentifier)action {
-    [sender setTitle:NSLocalizedString(@"Put", nil)];
-    _textLabel.text = NSLocalizedString(@"Choose Destination", nil);
-    _lockEditingForAction = YES;
-    switch (action) {
-        case UTActionMove:
-            [(UIBarButtonItem *)_editingToolbar.items[0] setEnabled:NO];
-            [(UIBarButtonItem *)_editingToolbar.items[4] setEnabled:NO];
-            [(UIBarButtonItem *)_editingToolbar.items[6] setEnabled:NO];
-            break;
-            
-        case UTActionCopy:
-            [(UIBarButtonItem *)_editingToolbar.items[0] setEnabled:NO];
-            [(UIBarButtonItem *)_editingToolbar.items[2] setEnabled:NO];
-            [(UIBarButtonItem *)_editingToolbar.items[6] setEnabled:NO];
-            break;
-            
-        default:
-            break;
-    }
-    if (_lockEditingForAction) {
-        
-        UIActionSheet *sheet = [[UIActionSheet alloc] init];
-        if (_selectedItems.count > 1) {
-            sheet.title = [NSString stringWithFormat:NSLocalizedString(@"Do you want to delete %lu selected items?", nil), _selectedItems.count];
-        } else {
-            sheet.title = [NSString stringWithFormat:NSLocalizedString(@"Do you want to delete %lu selected item?", nil), _selectedItems.count];
-        }
-        
-        sheet.delegate = self;
-        sheet.actionSheetStyle = UIActionSheetStyleDefault;
-        
-        [sheet addButtonWithTitle:NSLocalizedString(@"Delete", nil)];
-        [sheet addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
-        
-        sheet.cancelButtonIndex = 1;
-        
-        sheet.destructiveButtonIndex = 0;
-        
-        [sheet showFromToolbar:_editingToolbar];
-    }
-    
-    [self setEditing:NO];
-}
-
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
-    __block NSError *error;
-    switch (_action) {
-        case UTActionDelete: {
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                NSMutableArray *indexpaths = [NSMutableArray array];
-                NSMutableArray *objs = [NSMutableArray array];
-                for (NSNumber *index in _selectedItems) {
-                    UTFinderEntity *entity = _objects[index.integerValue];
-                    [objs addObject:entity];
-                    [indexpaths addObject:[NSIndexPath indexPathForRow:index.integerValue inSection:0]];
-                }
-                
-                for (UTFinderEntity *entity in objs) {
-                    if (checkReachableAtPath(entity.filePath)) {
-                        [[NSFileManager defaultManager] removeItemAtPath:entity.filePath error:&error];
-                        if (error) {
-                            NSLog(@"%@", error);
-                            break;
-                        }
-                        [_objects removeObject:entity];
-                        
-                    }
-                }
-                
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.collectionView deleteItemsAtIndexPaths:indexpaths];
-                    [self setEditing:NO];
-                });
-                
-            });
-            break;
-        }
-            
-        case UTActionMove:
-            for (NSNumber *index in _selectedItems) {
-                NSString *filePath = [[_objects objectAtIndex:index.integerValue] filePath];
-                NSString *fileName = [[filePath componentsSeparatedByString:@"/"] lastObject];
-                [[NSFileManager defaultManager] moveItemAtPath:filePath toPath:[_selectedItemPath stringByAppendingFormat:@"/%@", fileName] error:&error];
-                if (error) {
-                    NSLog(@"%@", error);
-                    break;
-                }
-            }
-            break;
-            break;
-            
-        case UTActionCopy:
-            
-            break;
-            
-        default:
-            break;
-            
-    }
-    if (error) {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"Something goes wrong when perform file action. Please check permission or contact us.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
-        [alert show];
-    }
-}
-
-#pragma mark - IAP Methods
 
 - (void)showImageBrowserAtIndex:(NSUInteger)index {
     // Create browser
