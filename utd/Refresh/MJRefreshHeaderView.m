@@ -202,7 +202,7 @@
 		case MJRefreshStateNormal: // 下拉可以刷新
         {
             // 设置文字
-			self.statusLabel.text = MJRefreshHeaderPullToRefresh;
+            self.statusLabel.text = MJRefreshHeaderPullToRefresh;
             
             // 刷新完毕
             if (MJRefreshStateRefreshing == oldState) {

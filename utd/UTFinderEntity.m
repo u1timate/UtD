@@ -85,13 +85,6 @@
     
     NSString *file;
     
-    UTFinderEntity *upEntity = [[UTFinderEntity alloc] init];
-    upEntity.fileName = NSLocalizedString(@"Up", nil);
-    upEntity.filePath = @"Up";
-    upEntity.fileAttrs = NSLocalizedString(@"Go Upper Directory...", nil);
-    
-    [array addObject:upEntity];
-    
     while (file = [e nextObject]) {
         [e skipDescendants];
         UTFinderEntity *entity = [[UTFinderEntity alloc] init];
@@ -104,11 +97,18 @@
     return array;
 }
 
-+ (UIImage *)thumbForImageAtPath:(NSString *)path destinationSize:(CGSize)size {
-    UIImage *originalImage = [[UIImage alloc] initWithContentsOfFile:path];
-    CGSize destinationSize = size;
-    UIGraphicsBeginImageContext(destinationSize);
-    [originalImage drawInRect:CGRectMake(0,0,destinationSize.width,destinationSize.height)];
++ (UIImage*)imageWithFilePath:(NSString *)filePath scaledToWidth:(float)i_width {
+    
+    UIImage *sourceImage = [UIImage imageWithContentsOfFile:filePath];
+    
+    float oldWidth = sourceImage.size.width;
+    float scaleFactor = i_width / oldWidth;
+    
+    float newHeight = sourceImage.size.height * scaleFactor;
+    float newWidth = oldWidth * scaleFactor;
+    
+    UIGraphicsBeginImageContext(CGSizeMake(newWidth, newHeight));
+    [sourceImage drawInRect:CGRectMake(0, 0, newWidth, newHeight)];
     UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return newImage;

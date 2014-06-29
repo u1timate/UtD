@@ -14,7 +14,7 @@
     self = [super initWithFrame:CGRectMake(0, 0, 80, 100)];
     if (self) {
         self.imageView = [[UIImageView alloc] initWithFrame:CGRectMake(5, 5, 70, 70)];
-        self.imageView.contentMode = UIViewContentModeScaleAspectFit;
+        _imageView.contentMode = UIViewContentModeScaleAspectFit;
         
         [self.contentView addSubview:self.imageView];
         
@@ -24,6 +24,7 @@
         self.textField.lineBreakMode = NSLineBreakByTruncatingMiddle;
         
         [self.contentView addSubview:self.textField];
+        
         
     }
     return self;

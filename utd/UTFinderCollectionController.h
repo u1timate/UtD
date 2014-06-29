@@ -10,6 +10,9 @@
 
 #import "MWPhotoBrowser.h"
 
-@interface UTFinderCollectionController : UICollectionViewController <UICollectionViewDelegateFlowLayout, MWPhotoBrowserDelegate>
+static UIProgressView *progressIndicator;
+
+@interface UTFinderCollectionController : UICollectionViewController <UICollectionViewDelegateFlowLayout, MWPhotoBrowserDelegate, UIToolbarDelegate, UIActionSheetDelegate>
+
 
 @end

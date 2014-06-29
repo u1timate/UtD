@@ -23,6 +23,8 @@
 		3B1EA6681938DCD0001D4327 /* UTCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1EA6671938DCD0001D4327 /* UTCollectionViewCell.m */; };
 		3B1EA66B1938DE2F001D4327 /* UTFinderCollectionController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1EA66A1938DE2F001D4327 /* UTFinderCollectionController.m */; };
 		3B1EA66E1938DFEE001D4327 /* UTFinderEntity.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1EA66D1938DFEE001D4327 /* UTFinderEntity.m */; };
+		3B5718F1195E876A00978A43 /* UITabBarController+UTTabBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B5718F0195E876A00978A43 /* UITabBarController+UTTabBarController.m */; };
+		3B571904195EEAA800978A43 /* UTAlertViewDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B571903195EEAA800978A43 /* UTAlertViewDelegate.m */; };
 		3B987AC1193B3EB300776045 /* MJRefreshBaseView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B987AB4193B3EB300776045 /* MJRefreshBaseView.m */; };
 		3B987AC2193B3EB300776045 /* MJRefreshConst.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B987AB6193B3EB300776045 /* MJRefreshConst.m */; };
 		3B987AC3193B3EB300776045 /* MJRefreshFooterView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B987AB8193B3EB300776045 /* MJRefreshFooterView.m */; };
@@ -110,6 +112,10 @@
 		3B1EA66A1938DE2F001D4327 /* UTFinderCollectionController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTFinderCollectionController.m; sourceTree = "<group>"; };
 		3B1EA66C1938DFEE001D4327 /* UTFinderEntity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTFinderEntity.h; sourceTree = "<group>"; };
 		3B1EA66D1938DFEE001D4327 /* UTFinderEntity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTFinderEntity.m; sourceTree = "<group>"; };
+		3B5718EF195E876A00978A43 /* UITabBarController+UTTabBarController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UITabBarController+UTTabBarController.h"; sourceTree = "<group>"; };
+		3B5718F0195E876A00978A43 /* UITabBarController+UTTabBarController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UITabBarController+UTTabBarController.m"; sourceTree = "<group>"; };
+		3B571902195EEAA800978A43 /* UTAlertViewDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTAlertViewDelegate.h; sourceTree = "<group>"; };
+		3B571903195EEAA800978A43 /* UTAlertViewDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTAlertViewDelegate.m; sourceTree = "<group>"; };
 		3B987AB2193B3EB300776045 /* MJRefresh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MJRefresh.h; path = Refresh/MJRefresh.h; sourceTree = "<group>"; };
 		3B987AB3193B3EB300776045 /* MJRefreshBaseView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MJRefreshBaseView.h; path = Refresh/MJRefreshBaseView.h; sourceTree = "<group>"; };
 		3B987AB4193B3EB300776045 /* MJRefreshBaseView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MJRefreshBaseView.m; path = Refresh/MJRefreshBaseView.m; sourceTree = "<group>"; };
@@ -319,14 +325,26 @@
 		3B1EA6651938DC57001D4327 /* FinderController */ = {
 			isa = PBXGroup;
 			children = (
-				3B1EA66C1938DFEE001D4327 /* UTFinderEntity.h */,
-				3B1EA66D1938DFEE001D4327 /* UTFinderEntity.m */,
-				3B1EA6661938DCD0001D4327 /* UTCollectionViewCell.h */,
-				3B1EA6671938DCD0001D4327 /* UTCollectionViewCell.m */,
+				3B5718F8195E89C400978A43 /* UTClass */,
 				3B1EA6691938DE2F001D4327 /* UTFinderCollectionController.h */,
 				3B1EA66A1938DE2F001D4327 /* UTFinderCollectionController.m */,
 			);
 			name = FinderController;
+			sourceTree = "<group>";
+		};
+		3B5718F8195E89C400978A43 /* UTClass */ = {
+			isa = PBXGroup;
+			children = (
+				3B1EA66C1938DFEE001D4327 /* UTFinderEntity.h */,
+				3B1EA66D1938DFEE001D4327 /* UTFinderEntity.m */,
+				3B1EA6661938DCD0001D4327 /* UTCollectionViewCell.h */,
+				3B1EA6671938DCD0001D4327 /* UTCollectionViewCell.m */,
+				3B5718EF195E876A00978A43 /* UITabBarController+UTTabBarController.h */,
+				3B5718F0195E876A00978A43 /* UITabBarController+UTTabBarController.m */,
+				3B571902195EEAA800978A43 /* UTAlertViewDelegate.h */,
+				3B571903195EEAA800978A43 /* UTAlertViewDelegate.m */,
+			);
+			name = UTClass;
 			sourceTree = "<group>";
 		};
 		3B987AB1193B3E7800776045 /* Refresh */ = {
@@ -648,10 +666,12 @@
 				3BBC28461951D1CE006AD56B /* SDWebImagePrefetcher.m in Sources */,
 				3B987AC4193B3EB300776045 /* MJRefreshHeaderView.m in Sources */,
 				3BBC283F1951D1CE006AD56B /* NSData+ImageContentType.m in Sources */,
+				3B5718F1195E876A00978A43 /* UITabBarController+UTTabBarController.m in Sources */,
 				3B1EA66B1938DE2F001D4327 /* UTFinderCollectionController.m in Sources */,
 				3BBC28331951D1CE006AD56B /* PSTCollectionViewFlowLayout.m in Sources */,
 				3BBC28301951D1CE006AD56B /* PSTCollectionViewCell.m in Sources */,
 				3BBC282B1951D1CE006AD56B /* DACircularProgressView.m in Sources */,
+				3B571904195EEAA800978A43 /* UTAlertViewDelegate.m in Sources */,
 				3BBC28471951D1CE006AD56B /* UIButton+WebCache.m in Sources */,
 				3BBC28431951D1CE006AD56B /* SDWebImageDownloader.m in Sources */,
 				3B1EA6411938DBDA001D4327 /* UTAppDelegate.m in Sources */,

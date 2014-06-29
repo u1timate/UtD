@@ -17,13 +17,13 @@
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </tabBar>
                     <connections>
-                        <segue destination="5Vn-7B-y14" kind="relationship" relationship="viewControllers" id="gGX-uY-5eN"/>
+                        <segue destination="5Vn-7B-y14" kind="relationship" relationship="viewControllers" id="JzK-M2-SF3"/>
                         <segue destination="v4G-XT-xrB" kind="relationship" relationship="viewControllers" id="GnA-nc-7ej"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="kh2-0R-x5g" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="220" y="-65"/>
+            <point key="canvasLocation" x="224" y="59"/>
         </scene>
         <!--Finder Collection Controller-->
         <scene sceneID="nHa-SL-9bh">
@@ -67,17 +67,6 @@
                     </collectionView>
                     <navigationItem key="navigationItem" id="FIf-y8-zq0">
                         <nil key="title"/>
-                        <segmentedControl key="titleView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" segmentControlStyle="bar" selectedSegmentIndex="0" id="NfC-FS-r2L">
-                            <rect key="frame" x="85" y="7" width="151" height="30"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                            <segments>
-                                <segment title="Table"/>
-                                <segment title="Collection"/>
-                            </segments>
-                            <connections>
-                                <action selector="changeStyle:" destination="4jk-43-fN7" eventType="valueChanged" id="J1x-i9-Lvz"/>
-                            </connections>
-                        </segmentedControl>
                     </navigationItem>
                 </collectionViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="VGt-QI-Oon" userLabel="First Responder" sceneMemberID="firstResponder"/>
