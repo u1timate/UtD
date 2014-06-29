@@ -30,6 +30,8 @@
 
 @property (weak, nonatomic) UIActivityViewController *activityViewController;
 
+@property (assign, nonatomic) BOOL lockForAction;
+
 @end
 
 typedef enum {
@@ -65,6 +67,7 @@ typedef enum {
     [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/RefreshArrow.png"] toPath:[_documentPath stringByAppendingString:@"/RefreshArrow.png"] error:nil];
     [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/Up.png"] toPath:[_documentPath stringByAppendingString:@"/Up.png"] error:nil];
     
+    _lockForAction = NO;
     
     self.collectionView.alwaysBounceVertical = YES;
     
@@ -98,24 +101,10 @@ typedef enum {
             break;
     }
     
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
-        _selectedItemPath = _documentPath;
+    _selectedItemPath = _documentPath;
         
-        _objects = [[UTFinderEntity generateFilesInPath:_selectedItemPath] mutableCopy];
-        
-        for (UTFinderEntity *entity in _objects) {
-            if (entity.type == UTFinderImageType) {
-                [_dirImages addObject:[UTFinderEntity imageWithFilePath:entity.filePath scaledToWidth:70.0f]];
-            } else {
-                [_dirImages addObject:entity.typeImage];
-            }
-        }
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.collectionView reloadData];
-        });
-    });
+    [self refreshCurrentFolder];
 }
 
 - (void)addHeader
@@ -129,21 +118,17 @@ typedef enum {
 
 - (void)goUpperDirectory {
     
+    if (_isEditing) {
+        [self setFinderEditing:nil];
+    }
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
         if (![[_selectedItemPath stringByDeletingLastPathComponent] isEqualToString:@"/var/mobile/Applications"]) {
             
             _selectedItemPath = [_selectedItemPath stringByDeletingLastPathComponent];
             
-            _objects = [[UTFinderEntity generateFilesInPath:_selectedItemPath] mutableCopy];
-            
-            for (UTFinderEntity *entity in _objects) {
-                if (entity.type == UTFinderImageType) {
-                    [_dirImages addObject:[UTFinderEntity imageWithFilePath:entity.filePath scaledToWidth:70.0f]];
-                } else {
-                    [_dirImages addObject:entity.typeImage];
-                }
-            }
+            [self refreshCurrentFolder];
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.collectionView reloadData];
@@ -153,7 +138,7 @@ typedef enum {
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.collectionView headerEndRefreshing];
-                [self showHudWithMessage:NSLocalizedString(@"No More Upper Directories", nil) iconName:@"operation_failed" progressIndicator:NO];
+                [self showHudWithMessage:NSLocalizedString(@"No More Upper Directories", nil) iconName:@"operation_failed"];
             });
         }
     });
@@ -216,26 +201,6 @@ typedef enum {
 
 #pragma mark - Collection View
 
-- (UICollectionViewLayout *)myCollectionViewLayout {
-    UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
-    
-    [flowLayout setScrollDirection:UICollectionViewScrollDirectionVertical];
-    flowLayout.minimumInteritemSpacing = 0;
-    flowLayout.minimumLineSpacing = 0;
- 
-    switch (_currentFinderStyle) {
-        case UTFinderLayoutCollectionStyle:
-            flowLayout.itemSize = CGSizeMake(80, 100);
-            break;
-            
-        default:
-            flowLayout.itemSize = CGSizeMake(320, 60);
-            break;
-    }
- 
-    return flowLayout;
-}
-
 - (void)setFinderEditing:(id)sender {
     
     NSString *path = [[[[NSBundle mainBundle] resourcePath] stringByDeletingLastPathComponent] stringByAppendingString:@"/Documents"];
@@ -246,7 +211,11 @@ typedef enum {
         return;
     }
     
-    _isEditing = !_isEditing;
+    if ([[sender title] isEqualToString:NSLocalizedString(@"Edit", nil)]) {
+        _isEditing = YES;
+    } else {
+        _isEditing = NO;
+    }
     
 	if (_isEditing) {
         
@@ -305,6 +274,30 @@ typedef enum {
     
     [self updateEditStatus:_isEditing];
     [self layoutTitleViewForSegment:!_isEditing];
+}
+
+- (UICollectionViewLayout *)myCollectionViewLayout {
+    UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc] init];
+    
+    [flowLayout setScrollDirection:UICollectionViewScrollDirectionVertical];
+    flowLayout.minimumInteritemSpacing = 0;
+    flowLayout.minimumLineSpacing = 0;
+ 
+    switch (_currentFinderStyle) {
+        case UTFinderLayoutCollectionStyle:
+            flowLayout.itemSize = CGSizeMake(80, 100);
+            break;
+            
+        default:
+            flowLayout.itemSize = CGSizeMake(320, 60);
+            break;
+    }
+ 
+    return flowLayout;
+}
+
+- (BOOL)collectionView:(UICollectionView *)collectionView shouldSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    return !_lockForAction;
 }
 
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
@@ -472,19 +465,8 @@ typedef enum {
                 
                 _selectedItemPath = [(UTFinderEntity *)_objects[indexPath.row] filePath];
                 
-                _objects = [[UTFinderEntity generateFilesInPath:_selectedItemPath] mutableCopy];
+                [self refreshCurrentFolder];
                 
-                for (UTFinderEntity *entity in _objects) {
-                    if (entity.type == UTFinderImageType) {
-                        [_dirImages addObject:[UTFinderEntity imageWithFilePath:entity.filePath scaledToWidth:70.0f]];
-                    } else {
-                        [_dirImages addObject:entity.typeImage];
-                    }
-                }
-                
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.collectionView reloadData];
-                });
             });
         } else if (fileType == UTFinderImageType) {
             _photos = [[NSMutableArray alloc] initWithCapacity:0];
@@ -550,16 +532,56 @@ BOOL checkReachableAtPath(NSString *path) {
     return a;
 }
 
-- (void)showHudWithMessage:(NSString *)message iconName:(NSString *)name progressIndicator:(BOOL)indicator {
+- (void)setLockForAction:(BOOL)lockForAction {
+    
+    _lockForAction = lockForAction;
+    
+    [self lockAction:lockForAction];
+}
+
+- (void)lockAction:(BOOL)locked {
+    self.navigationItem.leftBarButtonItem.enabled = !locked;
+    self.navigationItem.rightBarButtonItem.enabled = !locked;
+    self.segment.enabled = !locked;
+    for (UIBarButtonItem *item in _editingToolbar.items) {
+        item.enabled = !locked;
+    }
+}
+
+- (void)refreshCurrentFolder {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        _objects = [[UTFinderEntity generateFilesInPath:_selectedItemPath] mutableCopy];
+        
+        for (UTFinderEntity *entity in _objects) {
+            if (entity.type == UTFinderImageType) {
+                [_dirImages addObject:[UTFinderEntity imageWithFilePath:entity.filePath scaledToWidth:70.0f]];
+            } else {
+                [_dirImages addObject:entity.typeImage];
+            }
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.collectionView.visibleCells.count > 30) {
+                [self.collectionView reloadItemsAtIndexPaths:[self.collectionView indexPathsForVisibleItems]];
+            } else {
+                [self.collectionView reloadData];
+            }
+        });
+    });
+}
+
+- (void)showHudWithMessage:(NSString *)message iconName:(NSString *)name {
     LGViewHUD *hud = [LGViewHUD defaultHUD];
     hud.bottomText = message;
-    [hud showInView:self.view];
+    [hud showInView:self.view withAnimation:HUDAnimationNone];
     
     if (name) {
         hud.image = [UIImage imageNamed:name];
     }
     
-    hud.activityIndicatorOn = indicator;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [hud hideWithAnimation:HUDAnimationHideFadeOut];
+    });
+    
 }
 
 #pragma mark Toolbar Edit
@@ -572,6 +594,7 @@ BOOL checkReachableAtPath(NSString *path) {
         [alertview addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
         [alertview addButtonWithTitle:NSLocalizedString(@"Create", nil)];
         alertview.cancelButtonIndex = 0;
+        [[alertview textFieldAtIndex:0] setText:NSLocalizedString(@"Untitled Folder", nil)];
         [UTAlertViewDelegate showAlertView:alertview withCallback:^(NSInteger buttonIndex) {
             if (buttonIndex == 1) {
                 NSError *error;
@@ -581,7 +604,15 @@ BOOL checkReachableAtPath(NSString *path) {
                     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"Something goes wrong when perform file action. Please check permission or contact us.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
                     [alert show];
                 }
-                [self.collectionView reloadItemsAtIndexPaths:[self.collectionView indexPathsForVisibleItems]];
+                
+                UTFinderEntity *entity = [[UTFinderEntity alloc] init];
+                entity.fileName = dirname;
+                entity.filePath = [_documentPath stringByAppendingFormat:@"/%@", dirname];
+#warning 新建文件夹属性？
+                entity.fileAttrs = @"Some Attributes";
+                [_objects addObject:entity];
+                
+                [self.collectionView insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:self.collectionView.visibleCells.count inSection:0]]];
             }
         }];
     }
@@ -591,7 +622,7 @@ BOOL checkReachableAtPath(NSString *path) {
     //NSLog(@"Called");
     _isEditing = isEdit;
     
-    [self.collectionView reloadItemsAtIndexPaths:[self.collectionView indexPathsForVisibleItems]];
+    [self refreshCurrentFolder];
     
     _selectedItems = [NSMutableArray array];
 }
@@ -691,16 +722,18 @@ BOOL checkReachableAtPath(NSString *path) {
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
     if (buttonIndex != actionSheet.cancelButtonIndex) {
+        self.lockForAction = YES;
         __block NSError *error;
         switch (_action) {
             case UTActionDelete: {
                 
-                LGViewHUD *hud = [LGViewHUD defaultHUD];
+                __block LGViewHUD *hud = [LGViewHUD defaultHUD];
                 hud.bottomText = NSLocalizedString(@"Deleting Files", nil);
                 [hud showInView:self.view];
                 hud.activityIndicatorOn = YES;
                 
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                    
                     NSMutableArray *indexpaths = [NSMutableArray array];
                     NSMutableArray *objs = [NSMutableArray array];
                     for (NSNumber *index in _selectedItems) {
@@ -717,15 +750,16 @@ BOOL checkReachableAtPath(NSString *path) {
                                 break;
                             }
                             [_objects removeObject:entity];
-                            
                         }
                     }
                     
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self.collectionView deleteItemsAtIndexPaths:indexpaths];
-                        [self setFinderEditing:NO];
+                        [self setFinderEditing:nil];
                         [hud hideWithAnimation:HUDAnimationNone];
-                        //[self showHudWithMessage:NSLocalizedString(@"Deleted", nil) iconName:@"operation_done" progressIndicator:NO];
+                        [self.collectionView reloadItemsAtIndexPaths:[self.collectionView indexPathsForVisibleItems]];
+                        hud = nil;
+                        [self showHudWithMessage:NSLocalizedString(@"Deleted", nil) iconName:@"operation_done"];
                     });
                     
                 });
@@ -735,7 +769,7 @@ BOOL checkReachableAtPath(NSString *path) {
             case UTActionMove: {
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                     
-                    LGViewHUD *hud = [LGViewHUD defaultHUD];
+                    __block LGViewHUD *hud = [LGViewHUD defaultHUD];
                     hud.bottomText = NSLocalizedString(@"Moving Files", nil);
                     [hud showInView:self.view];
                     hud.activityIndicatorOn = YES;
@@ -747,11 +781,27 @@ BOOL checkReachableAtPath(NSString *path) {
                             NSLog(@"%@", error);
                             break;
                         }
+                        
+                        UTFinderEntity *entity = [[UTFinderEntity alloc] init];
+                        entity.fileName = fileName;
+                        entity.filePath = [_selectedItemPath stringByAppendingFormat:@"/%@", fileName];
+#warning 移动的文件属性
+                        entity.fileAttrs = @"Some Attributes";
+                        
+                        [_objects addObject:entity];
+                        
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [self.collectionView insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:self.collectionView.visibleCells.count inSection:0]]];
+                        });
+                        
                     }
+                    
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [self setFinderEditing:NO];
+                        
+                        [self setFinderEditing:nil];
                         [hud hideWithAnimation:HUDAnimationNone];
-                        //[self showHudWithMessage:NSLocalizedString(@"Moved", nil) iconName:@"operation_done" progressIndicator:NO];
+                        hud = nil;
+                        [self showHudWithMessage:NSLocalizedString(@"Moved", nil) iconName:@"operation_done"];
                     });
                 });
                 break;
@@ -759,7 +809,7 @@ BOOL checkReachableAtPath(NSString *path) {
                 
             case UTActionCopy: {
                 
-                LGViewHUD *hud = [LGViewHUD defaultHUD];
+                __block LGViewHUD *hud = [LGViewHUD defaultHUD];
                 hud.bottomText = NSLocalizedString(@"Copying Files", nil);
                 [hud showInView:self.view];
                 hud.activityIndicatorOn = YES;
@@ -772,11 +822,25 @@ BOOL checkReachableAtPath(NSString *path) {
                             NSLog(@"%@", error);
                             break;
                         }
+                        
+                        UTFinderEntity *entity = [[UTFinderEntity alloc] init];
+                        entity.fileName = fileName;
+                        entity.filePath = [_selectedItemPath stringByAppendingFormat:@"/%@", fileName];
+#warning 复制的文件属性
+                        entity.fileAttrs = @"Some Attributes";
+                        
+                        [_objects addObject:entity];
+                        
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [self.collectionView insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:self.collectionView.visibleCells.count inSection:0]]];
+                        });
                     }
+                    
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [self setFinderEditing:NO];
+                        [self setFinderEditing:nil];
                         [hud hideWithAnimation:HUDAnimationNone];
-                        [self showHudWithMessage:NSLocalizedString(@"Moved", nil) iconName:@"operation_done" progressIndicator:NO];
+                        hud = nil;
+                        [self showHudWithMessage:NSLocalizedString(@"Copied", nil) iconName:@"operation_done"];
                     });
                 });
                 break;
@@ -789,6 +853,7 @@ BOOL checkReachableAtPath(NSString *path) {
             UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"Something goes wrong when perform file action. Please check permission or contact us.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
             [alert show];
         }
+        self.lockForAction = NO;
     }
 }
 
@@ -802,6 +867,7 @@ BOOL checkReachableAtPath(NSString *path) {
     [alertview addButtonWithTitle:NSLocalizedString(@"Rename", nil)];
     alertview.cancelButtonIndex = 0;
     [UTAlertViewDelegate showAlertView:alertview withCallback:^(NSInteger buttonIndex) {
+        
         if (buttonIndex == 1) {
             NSError *error;
             NSString *dirname = [[alertview textFieldAtIndex:0] text];
@@ -871,6 +937,9 @@ BOOL checkReachableAtPath(NSString *path) {
                         break;
                     }
                 }
+            } else {
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"Please follow U1timate Drop Rename Regular Expression.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
+                [alert show];
             }
             
             if (error) {
@@ -880,11 +949,11 @@ BOOL checkReachableAtPath(NSString *path) {
             
             
             
-            [self setFinderEditing:NO];
+            [self setFinderEditing:nil];
             
             [self.collectionView reloadItemsAtIndexPaths:[self.collectionView indexPathsForVisibleItems]];
             
-            [self showHudWithMessage:NSLocalizedString(@"Renamed", nil) iconName:@"operation_done" progressIndicator:NO];
+            [self showHudWithMessage:NSLocalizedString(@"Renamed", nil) iconName:@"operation_done"];
         }
     }];
 }
