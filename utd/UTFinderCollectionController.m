@@ -58,6 +58,7 @@ typedef enum {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     _documentPath = [paths firstObject];
     
+#warning 测试文件操作用的。正式版需要删除
     [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/Checkmark.png"] toPath:[_documentPath stringByAppendingString:@"/Checkmark.png"] error:nil];
     [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/RefreshArrow.png"] toPath:[_documentPath stringByAppendingString:@"/RefreshArrow.png"] error:nil];
     [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/Up.png"] toPath:[_documentPath stringByAppendingString:@"/Up.png"] error:nil];
@@ -130,6 +131,14 @@ typedef enum {
             _selectedItemPath = [_selectedItemPath stringByDeletingLastPathComponent];
             
             _objects = [[UTFinderEntity generateFilesInPath:_selectedItemPath] mutableCopy];
+            
+            for (UTFinderEntity *entity in _objects) {
+                if (entity.type == UTFinderImageType) {
+                    [_dirImages addObject:[UTFinderEntity imageWithFilePath:entity.filePath scaledToWidth:70.0f]];
+                } else {
+                    [_dirImages addObject:entity.typeImage];
+                }
+            }
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.collectionView reloadData];
@@ -454,6 +463,14 @@ typedef enum {
                 _selectedItemPath = [(UTFinderEntity *)_objects[indexPath.row] filePath];
                 
                 _objects = [[UTFinderEntity generateFilesInPath:_selectedItemPath] mutableCopy];
+                
+                for (UTFinderEntity *entity in _objects) {
+                    if (entity.type == UTFinderImageType) {
+                        [_dirImages addObject:[UTFinderEntity imageWithFilePath:entity.filePath scaledToWidth:70.0f]];
+                    } else {
+                        [_dirImages addObject:entity.typeImage];
+                    }
+                }
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self.collectionView reloadData];
