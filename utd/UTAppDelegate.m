@@ -8,6 +8,8 @@
 
 #import "UTAppDelegate.h"
 
+#import "UTFinderTabBarController.h"
+
 @implementation UTAppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
@@ -18,6 +20,27 @@
 #warning 还没想好要干嘛－ －，先加在这里
         }
     }
+    
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    self.window.backgroundColor = [UIColor whiteColor];
+	self.window.rootViewController = [[UTFinderTabBarController alloc] init];
+    [self.window makeKeyAndVisible];
+    
+/*
+    UTFinderNavigationController *controller = [[UTFinderNavigationController alloc] init];
+    controller.title = NSLocalizedString(@"Finder", nil);
+    
+    NSMutableArray *topLevelControllers = [[NSMutableArray alloc] init];
+    [topLevelControllers addObject: controller];
+    UITabBarController *tabBarController = [[UITabBarController alloc] init];
+    tabBarController.delegate = self;
+    [tabBarController setViewControllers:topLevelControllers animated:NO];
+    tabBarController.selectedIndex = 0;
+    
+    
+    
+    [[controller.childViewControllers[0] collectionView] reloadData];
+*/
     return YES;
 }
 							

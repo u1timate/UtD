@@ -22,6 +22,7 @@
     delegate.callback = ^(NSInteger buttonIndex) {
         callback(buttonIndex);
         alertView.delegate = nil;
+        
 #pragma clang diagnostic push and #pragma clang diagnostic ignored "-Warc-retain-cycles"
         delegate = nil;
 #pragma clang diagnostic pop

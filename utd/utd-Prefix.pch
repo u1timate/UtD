@@ -30,6 +30,15 @@ typedef enum {
     UTFinderTextType = 6
 } UTFinderFileType;
 
+typedef enum {
+    UTActionDelete = 0,
+    UTActionCopy = 1,
+    UTActionMove = 2,
+    UTActionRename = 3
+} UTActionIdentifier;
+
+#define kUTDefaultFinderStyle @"UTDefaultFinderViewStyle"
+
 #define SYSTEM_VERSION_EQUAL_TO(v)                  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedSame)
 #define SYSTEM_VERSION_GREATER_THAN(v)              ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedDescending)
 #define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v)  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedAscending)

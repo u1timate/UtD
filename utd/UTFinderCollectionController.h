@@ -8,11 +8,16 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MWPhotoBrowser.h"
+#import "UTFinderController.h"
 
 static UIProgressView *progressIndicator;
 
-@interface UTFinderCollectionController : UICollectionViewController <UICollectionViewDelegateFlowLayout, MWPhotoBrowserDelegate, UIToolbarDelegate, UIActionSheetDelegate>
+@interface UTFinderCollectionController : UICollectionViewController <UICollectionViewDelegateFlowLayout>
 
+@property (strong, nonatomic) UTFinderController *myParentController;
 
+@property (strong, nonatomic) UIToolbar *editingToolbar;
+
+- (void)setFinderEditing:(id)sender;
+- (void)refreshCurrentFolder;
 @end

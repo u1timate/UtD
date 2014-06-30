@@ -17,15 +17,3 @@
 @property (strong, nonatomic) UIButton *button;
 
 @end
-
-@interface UTTableViewCell : UICollectionViewCell
-
-@property (strong, nonatomic) UIImageView *imageView;
-
-@property (strong, nonatomic) UILabel *textField;
-
-@property (strong, nonatomic) UILabel *detailTextField;
-
-@property (strong, nonatomic) UIButton *button;
-
-@end
