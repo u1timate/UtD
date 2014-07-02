@@ -38,6 +38,8 @@
 - (void)showHudWithMessage:(NSString *)message iconName:(NSString *)name;
 - (void)changeStyle:(id)sender;
 
+BOOL checkReachableAtPath(NSString *path);
+
 //ToolBar Action
 - (void)deleteItems:(id)sender;
 - (void)moveItems:(id)sender;

@@ -11,7 +11,7 @@
 #import "UTFinderController.h"
 #import "SWTableViewCell.h"
 
-@interface UTFinderTableViewController : UITableViewController <SWTableViewCellDelegate>
+@interface UTFinderTableViewController : UITableViewController <SWTableViewCellDelegate, UIActionSheetDelegate>
 
 @property (strong, nonatomic) UIToolbar *editingToolbar;
 @property (strong, nonatomic) UISegmentedControl *segment;

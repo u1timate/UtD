@@ -11,13 +11,15 @@
 #import "UTFinderEntity.h"
 #import "MJRefresh.h"
 #import "UITabBarController+UTTabBarController.h"
-
+#import "LGViewHUD.h"
 
 @interface UTFinderTableViewController ()
 
 @end
 
-@implementation UTFinderTableViewController
+@implementation UTFinderTableViewController {
+    UTFinderEntity *_currentEntity;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -280,6 +282,7 @@
         return cell;
     }
     
+    cell.delegate = self;
     
     UTFinderEntity *entity = _myParentController.objects[indexPath.row];
     
@@ -398,16 +401,95 @@
 - (void)swipeableTableViewCell:(SWTableViewCell *)cell didTriggerRightUtilityButtonWithIndex:(NSInteger)index {
     
     if (index == 0) {
+        [cell hideUtilityButtonsAnimated:YES];
         
+#warning More的index
     } else if (index == 1) {
+        
+        [cell hideUtilityButtonsAnimated:YES];
+        
+        NSUInteger index = [self.tableView indexPathForCell:cell].row;
+        
+        _currentEntity = [_myParentController.objects objectAtIndex:index];
+        
+        UIActionSheet *sheet = [[UIActionSheet alloc] init];
+        
+        sheet.title = [NSString stringWithFormat:NSLocalizedString(@"Do you want to delete %@", nil), _currentEntity.fileName];
+        sheet.delegate = self;
+        sheet.actionSheetStyle = UIActionSheetStyleDefault;
+        
+        [sheet addButtonWithTitle:NSLocalizedString(@"Delete", nil)];
+        [sheet addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
+        
+        sheet.cancelButtonIndex = 1;
+        
+        sheet.destructiveButtonIndex = 0;
+        
+        [sheet showFromTabBar:self.tabBarController.tabBar];
         
     }
 }
 
 - (void)swipeableTableViewCell:(SWTableViewCell *)cell didTriggerLeftUtilityButtonWithIndex:(NSInteger)index {
     if (index == 0) {
+        [cell hideUtilityButtonsAnimated:YES];
+        
+        
+        
+        
+        
         
     }
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (buttonIndex == actionSheet.destructiveButtonIndex) {
+        __block LGViewHUD *hud = [LGViewHUD defaultHUD];
+        hud.bottomText = NSLocalizedString(@"Deleting Files", nil);
+        [hud showInView:self.view];
+        hud.activityIndicatorOn = YES;
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            
+            NSError *error;
+            NSUInteger index;
+            if (checkReachableAtPath(_currentEntity.filePath)) {
+                [[NSFileManager defaultManager] removeItemAtPath:_currentEntity.filePath error:&error];
+                if (error) {
+                    NSLog(@"%@", error);
+                }
+                index = [_myParentController.objects indexOfObject:_currentEntity];
+                [_myParentController.objects removeObject:_currentEntity];
+            }
+            
+            _currentEntity = nil;
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                
+                [self.tableView deleteRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:index inSection:0]] withRowAnimation:UITableViewRowAnimationAutomatic];
+                
+                [hud hideWithAnimation:HUDAnimationNone];
+                
+                hud = nil;
+                [self showHudWithMessage:NSLocalizedString(@"Deleted", nil) iconName:@"operation_done"];
+            });
+        });
+    }
+}
+
+- (void)showHudWithMessage:(NSString *)message iconName:(NSString *)name {
+   LGViewHUD *hud = [LGViewHUD defaultHUD];
+   hud.bottomText = message;
+   [hud showInView:self.view withAnimation:HUDAnimationNone];
+   
+   if (name) {
+       hud.image = [UIImage imageNamed:name];
+   }
+   
+   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+       [hud hideWithAnimation:HUDAnimationHideFadeOut];
+   });
+   
 }
 
 @end
