@@ -139,7 +139,7 @@
 {
     if (!self.lastUpdateVolumeSize) return;
     
-    self.lastUpdateTimeLabel.text = [NSString stringWithFormat:@"设备可用容量: %@", self.lastUpdateVolumeSize];
+    self.lastUpdateTimeLabel.text = [NSString stringWithFormat:NSLocalizedString(@"Available Capacity: %@", nil), self.lastUpdateVolumeSize];
 }
 #pragma mark - 监听UIScrollView的contentOffset属性
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
@@ -202,7 +202,7 @@
 		case MJRefreshStateNormal: // 下拉可以刷新
         {
             // 设置文字
-            self.statusLabel.text = MJRefreshHeaderPullToRefresh;
+            self.statusLabel.text = [MJRefreshConst MJRefreshHeaderPullToRefresh];
             
             // 刷新完毕
             if (MJRefreshStateRefreshing == oldState) {
@@ -225,7 +225,7 @@
 		case MJRefreshStatePulling: // 松开可立即刷新
         {
             // 设置文字
-            self.statusLabel.text = MJRefreshHeaderReleaseToRefresh;
+            self.statusLabel.text = [MJRefreshConst MJRefreshHeaderReleaseToRefresh];
             // 执行动画
             [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{
                 self.arrowImage.transform = CGAffineTransformMakeRotation(M_PI);
@@ -236,7 +236,7 @@
 		case MJRefreshStateRefreshing: // 正在刷新中
         {
             // 设置文字
-            self.statusLabel.text = MJRefreshHeaderRefreshing;
+            self.statusLabel.text = [MJRefreshConst MJRefreshHeaderRefreshing];
             
             // 执行动画
             [UIView animateWithDuration:MJRefreshFastAnimationDuration animations:^{

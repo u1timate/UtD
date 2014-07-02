@@ -12,6 +12,7 @@
 #import "MJRefresh.h"
 #import "UITabBarController+UTTabBarController.h"
 
+
 @interface UTFinderTableViewController ()
 
 @end
@@ -25,7 +26,7 @@
     
     self.tableView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
     
-    [self.tableView registerClass:[UTTableViewCell class] forCellReuseIdentifier:@"FinderTableCell"];
+    [self.tableView registerClass:[SWTableViewCell class] forCellReuseIdentifier:@"FinderTableCell"];
     
     UIEdgeInsets defaultInsets = self.tableView.separatorInset;
     
@@ -34,7 +35,9 @@
     
     
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDirectory:)];
+    
+    [self setLeftBarItem];
+    
     [_myParentController layoutTitleViewForSegment:YES];
     
     [self addHeader];
@@ -42,9 +45,18 @@
     [self refreshCurrentFolder];
 }
 
+- (void)setLeftBarItem {
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:kUTDefaultPullToRefresh]) {
+        
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"go_up"] style:UIBarButtonItemStyleBordered target:self action:@selector(goUpperDirectory)];
+    } else {
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(addNewDirectory:)];
+    }
+}
+
 - (void)hideToolBar {
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDirectory:)];
+    [self setLeftBarItem];
     [self.tabBarController showTabBarAnimated:NO];
     [_editingToolbar removeFromSuperview];
     [_myParentController layoutTitleViewForSegment:YES];
@@ -59,8 +71,13 @@
     __unsafe_unretained typeof(self) vc = self;
     
     [self.tableView addHeaderWithCallback:^{
-        [vc goUpperDirectory];
+        if ([[NSUserDefaults standardUserDefaults] boolForKey:kUTDefaultPullToRefresh]) {
+            [vc refreshCurrentFolder];
+        } else {
+            [vc goUpperDirectory];
+        }
     }];
+    
 }
 
 - (void)goUpperDirectory {
@@ -123,10 +140,12 @@
             } else {
                 [self.tableView reloadData];
             }
-            
+            if ([[NSUserDefaults standardUserDefaults] boolForKey:kUTDefaultPullToRefresh]) {
+                [self.tableView headerEndRefreshing];
+            }
             [indicator stopAnimating];
             indicator = nil;
-            self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:_myParentController action:@selector(addNewDirectory:)];
+            [self setLeftBarItem];
         });
     });
 }
@@ -186,7 +205,7 @@
         
     } else {
         if (!_myParentController.lockForAction) {
-            self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:_myParentController action:@selector(addNewDirectory:)];
+            [self setLeftBarItem];
             [self.tabBarController showTabBarAnimated:NO];
             [_editingToolbar removeFromSuperview];
             [_myParentController layoutTitleViewForSegment:YES];
@@ -195,7 +214,7 @@
             _myParentController.selectedItems = nil;
             _myParentController.selectedItemsFilePaths = nil;
         } else {
-            self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addNewDirectory:)];
+            [self setLeftBarItem];
             
             self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Cancel", nil) style:UIBarButtonItemStyleBordered target:self action:@selector(hideToolBar)];
         }
@@ -255,11 +274,7 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     
-    UTTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"FinderTableCell" forIndexPath:indexPath];
-    
-    if (cell == nil) {
-        cell = [[UTTableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"FinderTableCell"];
-    }
+    SWTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"FinderTableCell" forIndexPath:indexPath];
     
     if (indexPath.row > _myParentController.objects.count) {
         return cell;
@@ -279,6 +294,11 @@
             cell.imageView.image = _myParentController.dirImages[indexPath.row];
         });
     }
+    
+    cell.rightUtilityButtons = [self addRightButtons];
+    
+    cell.leftUtilityButtons = [self addLeftButtons];
+    
     
     return cell;
 }
@@ -339,32 +359,56 @@
     }
 }
 
-@end
+#pragma mark - SWTableViewCell
 
-
-
-@implementation UTTableViewCell
-
-- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
-    return [super initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:reuseIdentifier];
+- (NSArray *)addLeftButtons
+{
+    NSMutableArray *leftUtilityButtons = [NSMutableArray new];
+    
+    [leftUtilityButtons sw_addUtilityButtonWithColor:
+     [UIColor colorWithRed:(float)246/255 green:(float)198/255 blue:(float)43/255 alpha:1.0f] title:NSLocalizedString(@"Share", nil)];
+    
+    return leftUtilityButtons;
 }
 
+- (NSArray *)addRightButtons
+{
+    NSMutableArray *rightUtilityButtons = [NSMutableArray new];
+    
+    [rightUtilityButtons sw_addUtilityButtonWithColor:
+     [UIColor colorWithRed:0.78f green:0.78f blue:0.8f alpha:1.0] title:NSLocalizedString(@"More", nil)];
+    
+    [rightUtilityButtons sw_addUtilityButtonWithColor:
+     [UIColor colorWithRed:1.0f green:0.231f blue:0.188 alpha:1.0f] title:NSLocalizedString(@"Delete", nil)];
+   
+    return rightUtilityButtons;
+}
 
+- (BOOL)swipeableTableViewCellShouldHideUtilityButtonsOnSwipe:(SWTableViewCell *)cell
+{
+    // allow just one cell's utility button to be open at once
+    return YES;
+}
 
-- (void)layoutSubviews {
-    [super layoutSubviews];
+- (BOOL)swipeableTableViewCell:(SWTableViewCell *)cell canSwipeToState:(SWCellState)state
+{
+    return YES;
+}
+
+- (void)swipeableTableViewCell:(SWTableViewCell *)cell didTriggerRightUtilityButtonWithIndex:(NSInteger)index {
     
-    CGRect frame = self.imageView.frame;
-    
-    self.imageView.frame = CGRectMake(frame.origin.x + 5, frame.origin.y + 5, 45, 45);
-    
-    frame = self.textLabel.frame;
-    
-    self.textLabel.frame = CGRectMake(self.imageView.frame.origin.x + self.imageView.frame.size.width + 15, frame.origin.y, frame.size.width, frame.size.height);
-    
-    frame = self.detailTextLabel.frame;
-    
-    self.detailTextLabel.frame = CGRectMake(self.imageView.frame.origin.x + self.imageView.frame.size.width + 15, frame.origin.y, frame.size.width, frame.size.height);
+    if (index == 0) {
+        
+    } else if (index == 1) {
+        
+    }
+}
+
+- (void)swipeableTableViewCell:(SWTableViewCell *)cell didTriggerLeftUtilityButtonWithIndex:(NSInteger)index {
+    if (index == 0) {
+        
+    }
 }
 
 @end
+

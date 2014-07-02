@@ -9,13 +9,18 @@
 /* Begin PBXBuildFile section */
 		3B112058196155330070B1D3 /* UTFinderTabBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B112057196155330070B1D3 /* UTFinderTabBarController.m */; };
 		3B11205B1961565E0070B1D3 /* UTFinderController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B11205A1961565E0070B1D3 /* UTFinderController.m */; };
+		3B1120AD1961A5330070B1D3 /* NSMutableArray+SWUtilityButtons.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1120A21961A5330070B1D3 /* NSMutableArray+SWUtilityButtons.m */; };
+		3B1120AE1961A5330070B1D3 /* SWCellScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1120A41961A5330070B1D3 /* SWCellScrollView.m */; };
+		3B1120AF1961A5330070B1D3 /* SWLongPressGestureRecognizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1120A61961A5330070B1D3 /* SWLongPressGestureRecognizer.m */; };
+		3B1120B01961A5330070B1D3 /* SWTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1120A81961A5330070B1D3 /* SWTableViewCell.m */; };
+		3B1120B11961A5330070B1D3 /* SWUtilityButtonTapGestureRecognizer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1120AA1961A5330070B1D3 /* SWUtilityButtonTapGestureRecognizer.m */; };
+		3B1120B21961A5330070B1D3 /* SWUtilityButtonView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1120AC1961A5330070B1D3 /* SWUtilityButtonView.m */; };
 		3B1EA6311938DBDA001D4327 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B1EA6301938DBDA001D4327 /* Foundation.framework */; };
 		3B1EA6331938DBDA001D4327 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B1EA6321938DBDA001D4327 /* CoreGraphics.framework */; };
 		3B1EA6351938DBDA001D4327 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B1EA6341938DBDA001D4327 /* UIKit.framework */; };
 		3B1EA63B1938DBDA001D4327 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3B1EA6391938DBDA001D4327 /* InfoPlist.strings */; };
 		3B1EA63D1938DBDA001D4327 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1EA63C1938DBDA001D4327 /* main.m */; };
 		3B1EA6411938DBDA001D4327 /* UTAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1EA6401938DBDA001D4327 /* UTAppDelegate.m */; };
-		3B1EA6441938DBDA001D4327 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3B1EA6421938DBDA001D4327 /* Main.storyboard */; };
 		3B1EA6491938DBDA001D4327 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3B1EA6481938DBDA001D4327 /* Images.xcassets */; };
 		3B1EA6501938DBDA001D4327 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B1EA64F1938DBDA001D4327 /* XCTest.framework */; };
 		3B1EA6511938DBDA001D4327 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3B1EA6301938DBDA001D4327 /* Foundation.framework */; };
@@ -97,6 +102,18 @@
 		3B112057196155330070B1D3 /* UTFinderTabBarController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTFinderTabBarController.m; sourceTree = "<group>"; };
 		3B1120591961565E0070B1D3 /* UTFinderController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UTFinderController.h; sourceTree = "<group>"; };
 		3B11205A1961565E0070B1D3 /* UTFinderController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UTFinderController.m; sourceTree = "<group>"; };
+		3B1120A11961A5330070B1D3 /* NSMutableArray+SWUtilityButtons.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMutableArray+SWUtilityButtons.h"; sourceTree = "<group>"; };
+		3B1120A21961A5330070B1D3 /* NSMutableArray+SWUtilityButtons.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMutableArray+SWUtilityButtons.m"; sourceTree = "<group>"; };
+		3B1120A31961A5330070B1D3 /* SWCellScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SWCellScrollView.h; sourceTree = "<group>"; };
+		3B1120A41961A5330070B1D3 /* SWCellScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SWCellScrollView.m; sourceTree = "<group>"; };
+		3B1120A51961A5330070B1D3 /* SWLongPressGestureRecognizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SWLongPressGestureRecognizer.h; sourceTree = "<group>"; };
+		3B1120A61961A5330070B1D3 /* SWLongPressGestureRecognizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SWLongPressGestureRecognizer.m; sourceTree = "<group>"; };
+		3B1120A71961A5330070B1D3 /* SWTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SWTableViewCell.h; sourceTree = "<group>"; };
+		3B1120A81961A5330070B1D3 /* SWTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SWTableViewCell.m; sourceTree = "<group>"; };
+		3B1120A91961A5330070B1D3 /* SWUtilityButtonTapGestureRecognizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SWUtilityButtonTapGestureRecognizer.h; sourceTree = "<group>"; };
+		3B1120AA1961A5330070B1D3 /* SWUtilityButtonTapGestureRecognizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SWUtilityButtonTapGestureRecognizer.m; sourceTree = "<group>"; };
+		3B1120AB1961A5330070B1D3 /* SWUtilityButtonView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SWUtilityButtonView.h; sourceTree = "<group>"; };
+		3B1120AC1961A5330070B1D3 /* SWUtilityButtonView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SWUtilityButtonView.m; sourceTree = "<group>"; };
 		3B1EA62D1938DBDA001D4327 /* utd.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = utd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B1EA6301938DBDA001D4327 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		3B1EA6321938DBDA001D4327 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -107,7 +124,6 @@
 		3B1EA63E1938DBDA001D4327 /* utd-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "utd-Prefix.pch"; sourceTree = "<group>"; };
 		3B1EA63F1938DBDA001D4327 /* UTAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UTAppDelegate.h; sourceTree = "<group>"; };
 		3B1EA6401938DBDA001D4327 /* UTAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UTAppDelegate.m; sourceTree = "<group>"; };
-		3B1EA6431938DBDA001D4327 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		3B1EA6481938DBDA001D4327 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		3B1EA64E1938DBDA001D4327 /* utdTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = utdTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B1EA64F1938DBDA001D4327 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -259,6 +275,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3B1120A01961A5330070B1D3 /* Swipe */ = {
+			isa = PBXGroup;
+			children = (
+				3B1120A11961A5330070B1D3 /* NSMutableArray+SWUtilityButtons.h */,
+				3B1120A21961A5330070B1D3 /* NSMutableArray+SWUtilityButtons.m */,
+				3B1120A31961A5330070B1D3 /* SWCellScrollView.h */,
+				3B1120A41961A5330070B1D3 /* SWCellScrollView.m */,
+				3B1120A51961A5330070B1D3 /* SWLongPressGestureRecognizer.h */,
+				3B1120A61961A5330070B1D3 /* SWLongPressGestureRecognizer.m */,
+				3B1120A71961A5330070B1D3 /* SWTableViewCell.h */,
+				3B1120A81961A5330070B1D3 /* SWTableViewCell.m */,
+				3B1120A91961A5330070B1D3 /* SWUtilityButtonTapGestureRecognizer.h */,
+				3B1120AA1961A5330070B1D3 /* SWUtilityButtonTapGestureRecognizer.m */,
+				3B1120AB1961A5330070B1D3 /* SWUtilityButtonView.h */,
+				3B1120AC1961A5330070B1D3 /* SWUtilityButtonView.m */,
+			);
+			path = Swipe;
+			sourceTree = "<group>";
+		};
 		3B1EA6241938DBDA001D4327 = {
 			isa = PBXGroup;
 			children = (
@@ -293,13 +328,13 @@
 		3B1EA6361938DBDA001D4327 /* utd */ = {
 			isa = PBXGroup;
 			children = (
+				3B1120A01961A5330070B1D3 /* Swipe */,
 				3B8FB2A81960305A00DBC96E /* HUD */,
 				3BBC27C01951D1CE006AD56B /* MWPhotoBrowser */,
 				3B987AB1193B3E7800776045 /* Refresh */,
 				3B1EA6651938DC57001D4327 /* FinderController */,
 				3B1EA63F1938DBDA001D4327 /* UTAppDelegate.h */,
 				3B1EA6401938DBDA001D4327 /* UTAppDelegate.m */,
-				3B1EA6421938DBDA001D4327 /* Main.storyboard */,
 				3B1EA6481938DBDA001D4327 /* Images.xcassets */,
 				3B1EA6371938DBDA001D4327 /* Supporting Files */,
 			);
@@ -633,7 +668,6 @@
 				3BBC282D1951D1CE006AD56B /* README.mdown in Resources */,
 				3BBC284D1951D1CE006AD56B /* MWPhotoBrowser.bundle in Resources */,
 				3B1EA63B1938DBDA001D4327 /* InfoPlist.strings in Resources */,
-				3B1EA6441938DBDA001D4327 /* Main.storyboard in Resources */,
 				3BBC283B1951D1CE006AD56B /* LICENSE in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -671,11 +705,14 @@
 				3BBC28241951D1CE006AD56B /* MWGridCell.m in Sources */,
 				3BBC28401951D1CE006AD56B /* SDImageCache.m in Sources */,
 				3B112058196155330070B1D3 /* UTFinderTabBarController.m in Sources */,
+				3B1120B11961A5330070B1D3 /* SWUtilityButtonTapGestureRecognizer.m in Sources */,
 				3BBC28341951D1CE006AD56B /* PSTCollectionViewItemKey.m in Sources */,
+				3B1120B01961A5330070B1D3 /* SWTableViewCell.m in Sources */,
 				3B987AC6193B3EB300776045 /* UIScrollView+MJRefresh.m in Sources */,
 				3BBC283A1951D1CE006AD56B /* PSTGridLayoutSection.m in Sources */,
 				3BBC28491951D1CE006AD56B /* UIImage+MultiFormat.m in Sources */,
 				3B987AC1193B3EB300776045 /* MJRefreshBaseView.m in Sources */,
+				3B1120AF1961A5330070B1D3 /* SWLongPressGestureRecognizer.m in Sources */,
 				3B1EA63D1938DBDA001D4327 /* main.m in Sources */,
 				3B987AC5193B3EB300776045 /* UIScrollView+Extension.m in Sources */,
 				3BBC28481951D1CE006AD56B /* UIImage+GIF.m in Sources */,
@@ -687,6 +724,7 @@
 				3B11205B1961565E0070B1D3 /* UTFinderController.m in Sources */,
 				3BBC28441951D1CE006AD56B /* SDWebImageDownloaderOperation.m in Sources */,
 				3BBC282A1951D1CE006AD56B /* MWZoomingScrollView.m in Sources */,
+				3B1120AE1961A5330070B1D3 /* SWCellScrollView.m in Sources */,
 				3BBC28381951D1CE006AD56B /* PSTGridLayoutItem.m in Sources */,
 				3BBC28281951D1CE006AD56B /* MWTapDetectingImageView.m in Sources */,
 				3BBC28391951D1CE006AD56B /* PSTGridLayoutRow.m in Sources */,
@@ -707,8 +745,10 @@
 				3BBC28301951D1CE006AD56B /* PSTCollectionViewCell.m in Sources */,
 				3BBC282B1951D1CE006AD56B /* DACircularProgressView.m in Sources */,
 				3B571904195EEAA800978A43 /* UTAlertViewDelegate.m in Sources */,
+				3B1120B21961A5330070B1D3 /* SWUtilityButtonView.m in Sources */,
 				3BBC28471951D1CE006AD56B /* UIButton+WebCache.m in Sources */,
 				3BBC28431951D1CE006AD56B /* SDWebImageDownloader.m in Sources */,
+				3B1120AD1961A5330070B1D3 /* NSMutableArray+SWUtilityButtons.m in Sources */,
 				3B1EA6411938DBDA001D4327 /* UTAppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -738,14 +778,6 @@
 				3B1EA63A1938DBDA001D4327 /* en */,
 			);
 			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		3B1EA6421938DBDA001D4327 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				3B1EA6431938DBDA001D4327 /* Base */,
-			);
-			name = Main.storyboard;
 			sourceTree = "<group>";
 		};
 		3B1EA6581938DBDA001D4327 /* InfoPlist.strings */ = {

@@ -32,7 +32,7 @@
     barButton.action = @selector(setFinderEditing:);
     self.navigationItem.rightBarButtonItem = barButton;
     
-    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:_myParentController action:@selector(addNewDirectory:)];
+    [self setLeftBarItem];
     
     self.collectionView.backgroundColor = [UIColor whiteColor];
     
@@ -54,8 +54,21 @@
     __unsafe_unretained typeof(self) vc = self;
     
     [self.collectionView addHeaderWithCallback:^{
-        [vc goUpperDirectory];
+        if ([[NSUserDefaults standardUserDefaults] boolForKey:kUTDefaultPullToRefresh]) {
+            [vc refreshCurrentFolder];
+        } else {
+            [vc goUpperDirectory];
+        }
     }];
+}
+
+- (void)setLeftBarItem {
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:kUTDefaultPullToRefresh]) {
+        
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"go_up"] style:UIBarButtonItemStyleBordered target:self action:@selector(goUpperDirectory)];
+    } else {
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh target:self action:@selector(addNewDirectory:)];
+    }
 }
 
 - (void)goUpperDirectory {
@@ -121,7 +134,7 @@
             
             [indicator stopAnimating];
             indicator = nil;
-            self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:_myParentController action:@selector(addNewDirectory:)];
+            [self setLeftBarItem];
         });
     });
 }
@@ -198,7 +211,8 @@
 	} else {
         self.navigationItem.rightBarButtonItem.title = NSLocalizedString(@"Edit", nil);
         
-        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:_myParentController action:@selector(addNewDirectory:)];
+        [self setLeftBarItem];
+        
         [self.tabBarController showTabBarAnimated:NO];
         [_editingToolbar removeFromSuperview];
         [_myParentController layoutTitleViewForSegment:YES];

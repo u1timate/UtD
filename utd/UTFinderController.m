@@ -76,7 +76,8 @@
 }
 
 + (void)initialize {
-    [[NSUserDefaults standardUserDefaults] registerDefaults:@{kUTDefaultFinderStyle : [NSNumber numberWithInteger:UTFinderLayoutTableStyle]}];
+    [[NSUserDefaults standardUserDefaults] registerDefaults:@{kUTDefaultFinderStyle : [NSNumber numberWithInteger:UTFinderLayoutTableStyle],
+                                                              kUTDefaultPullToRefresh: @YES}];
 }
 
 - (void)awakeFromNib {
@@ -85,8 +86,6 @@
     [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/Checkmark.png"] toPath:[_documentPath stringByAppendingString:@"/Checkmark.png"] error:nil];
     [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/RefreshArrow.png"] toPath:[_documentPath stringByAppendingString:@"/RefreshArrow.png"] error:nil];
     [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/Up.png"] toPath:[_documentPath stringByAppendingString:@"/Up.png"] error:nil];
-    
-    
     
     [self layoutTitleViewForSegment:YES];
     
@@ -660,6 +659,8 @@ BOOL checkReachableAtPath(NSString *path) {
 
 - (void)shareAction:(id)sender {
     NSLog(@"Not done");
+    
+    [self showHudWithMessage:@"Not Done Yet" iconName:@"operation_failed"];
     // Handle default actions
     /*    if (SYSTEM_VERSION_LESS_THAN(@"6")) {
      
