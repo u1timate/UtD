@@ -34,7 +34,8 @@ typedef enum {
     UTActionDelete = 0,
     UTActionCopy = 1,
     UTActionMove = 2,
-    UTActionRename = 3
+    UTActionRename = 3,
+    UTActionMore = 4
 } UTActionIdentifier;
 
 #define kUTDefaultFinderStyle @"UTDefaultFinderViewStyle"

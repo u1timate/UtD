@@ -82,10 +82,7 @@
 
 - (void)awakeFromNib {
     
-#warning 测试文件操作用的。正式版需要删除
-    [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/Checkmark.png"] toPath:[_documentPath stringByAppendingString:@"/Checkmark.png"] error:nil];
-    [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/RefreshArrow.png"] toPath:[_documentPath stringByAppendingString:@"/RefreshArrow.png"] error:nil];
-    [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/Up.png"] toPath:[_documentPath stringByAppendingString:@"/Up.png"] error:nil];
+
     
     [self layoutTitleViewForSegment:YES];
     
@@ -290,6 +287,11 @@ BOOL checkReachableAtPath(NSString *path) {
 
 - (void)operateItems:(id)sender action:(UTActionIdentifier)action {
     
+    if (_selectedItems.count < 1) {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"You must choose at least one item.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
+        [alert show];
+    }
+    
     if (![[sender title] isEqualToString:NSLocalizedString(@"Put", nil)]) {
         _lockForAction = YES;
         [sender setTitle:NSLocalizedString(@"Put", nil)];
@@ -410,6 +412,11 @@ BOOL checkReachableAtPath(NSString *path) {
                         
                         hud = nil;
                         [self showHudWithMessage:NSLocalizedString(@"Deleted", nil) iconName:@"operation_done"];
+                        _selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
+                        _selectedItemsFilePaths = [[NSMutableArray alloc] initWithCapacity:0];
+                        if (_currentFinderStyle == UTFinderLayoutTableStyle && _navigationController.topViewController.navigationItem.rightBarButtonItem == nil) {
+                            [_navigationController.topViewController.navigationItem setRightBarButtonItem:_navigationController.topViewController.editButtonItem animated:YES];
+                        }
                     });
                     
                 });
@@ -461,6 +468,8 @@ BOOL checkReachableAtPath(NSString *path) {
                         [hud hideWithAnimation:HUDAnimationNone];
                         hud = nil;
                         [self showHudWithMessage:NSLocalizedString(@"Moved", nil) iconName:@"operation_done"];
+                        _selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
+                        _selectedItemsFilePaths = [[NSMutableArray alloc] initWithCapacity:0];
                     });
                 });
                 _lockForAction = NO;
@@ -513,6 +522,8 @@ BOOL checkReachableAtPath(NSString *path) {
                         [hud hideWithAnimation:HUDAnimationNone];
                         hud = nil;
                         [self showHudWithMessage:NSLocalizedString(@"Copied", nil) iconName:@"operation_done"];
+                        _selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
+                        _selectedItemsFilePaths = [[NSMutableArray alloc] initWithCapacity:0];
                     });
                 });
                 _lockForAction = NO;

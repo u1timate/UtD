@@ -21,26 +21,20 @@
         }
     }
     
+#warning 测试文件操作用的。正式版需要删除
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *_documentPath = [paths firstObject];
+    [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/Checkmark.png"] toPath:[_documentPath stringByAppendingString:@"/Checkmark.png"] error:nil];
+    [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/RefreshArrow.png"] toPath:[_documentPath stringByAppendingString:@"/RefreshArrow.png"] error:nil];
+    [[NSFileManager defaultManager] copyItemAtPath:[[[NSBundle mainBundle] resourcePath] stringByAppendingString:@"/Up.png"] toPath:[_documentPath stringByAppendingString:@"/Up.png"] error:nil];
+    
+    // formal code
+    
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
 	self.window.rootViewController = [[UTFinderTabBarController alloc] init];
     [self.window makeKeyAndVisible];
     
-/*
-    UTFinderNavigationController *controller = [[UTFinderNavigationController alloc] init];
-    controller.title = NSLocalizedString(@"Finder", nil);
-    
-    NSMutableArray *topLevelControllers = [[NSMutableArray alloc] init];
-    [topLevelControllers addObject: controller];
-    UITabBarController *tabBarController = [[UITabBarController alloc] init];
-    tabBarController.delegate = self;
-    [tabBarController setViewControllers:topLevelControllers animated:NO];
-    tabBarController.selectedIndex = 0;
-    
-    
-    
-    [[controller.childViewControllers[0] collectionView] reloadData];
-*/
     return YES;
 }
 							

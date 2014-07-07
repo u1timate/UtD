@@ -45,5 +45,6 @@ BOOL checkReachableAtPath(NSString *path);
 - (void)moveItems:(id)sender;
 - (void)copyItems:(id)sender;
 - (void)renameItems:(id)sender;
+- (void)operateItems:(id)sender action:(UTActionIdentifier)action;
 
 @end

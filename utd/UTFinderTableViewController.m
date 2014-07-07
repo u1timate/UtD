@@ -12,6 +12,7 @@
 #import "MJRefresh.h"
 #import "UITabBarController+UTTabBarController.h"
 #import "LGViewHUD.h"
+#import "UTAlertViewDelegate.h"
 
 @interface UTFinderTableViewController ()
 
@@ -19,6 +20,8 @@
 
 @implementation UTFinderTableViewController {
     UTFinderEntity *_currentEntity;
+    UTActionIdentifier _action;
+    NSString *_rawPath;
 }
 
 - (void)viewDidLoad {
@@ -313,9 +316,9 @@
         
         if (fileType == UTFinderFolderType) {
             
+            _myParentController.selectedItemPath = [(UTFinderEntity *)_myParentController.objects[indexPath.row] filePath];
+            
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                
-                _myParentController.selectedItemPath = [(UTFinderEntity *)_myParentController.objects[indexPath.row] filePath];
                 
                 [self refreshCurrentFolder];
                 
@@ -402,11 +405,35 @@
     
     if (index == 0) {
         [cell hideUtilityButtonsAnimated:YES];
+        _action = UTActionMore;
+        
+        NSUInteger index = [self.tableView indexPathForCell:cell].row;
+        
+        _currentEntity = [_myParentController.objects objectAtIndex:index];
+        
+        _rawPath = _currentEntity.filePath;
+        
+        UIActionSheet *sheet = [[UIActionSheet alloc] init];
+        sheet.title = [NSString stringWithFormat:NSLocalizedString(@"What do you want to do with %@", nil), _currentEntity.fileName];
+        sheet.actionSheetStyle = UIActionSheetStyleAutomatic;
+        sheet.delegate = self;
+        
+        [sheet addButtonWithTitle:NSLocalizedString(@"Move", nil)];
+        [sheet addButtonWithTitle:NSLocalizedString(@"Copy", nil)];
+        [sheet addButtonWithTitle:NSLocalizedString(@"Rename", nil)];
+        [sheet addButtonWithTitle:NSLocalizedString(@"Delete", nil)];
+        [sheet addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
+        
+        sheet.destructiveButtonIndex = 3;
+        sheet.cancelButtonIndex = 4;
+        
+        [sheet showFromTabBar:self.tabBarController.tabBar];
         
 #warning More的index
     } else if (index == 1) {
         
         [cell hideUtilityButtonsAnimated:YES];
+        _action = UTActionDelete;
         
         NSUInteger index = [self.tableView indexPathForCell:cell].row;
         
@@ -442,39 +469,167 @@
     }
 }
 
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex == actionSheet.destructiveButtonIndex) {
-        __block LGViewHUD *hud = [LGViewHUD defaultHUD];
-        hud.bottomText = NSLocalizedString(@"Deleting Files", nil);
-        [hud showInView:self.view];
-        hud.activityIndicatorOn = YES;
+- (void)deleteSelectedFile:(id)sender {
+    __block LGViewHUD *hud = [LGViewHUD defaultHUD];
+    hud.bottomText = NSLocalizedString(@"Deleting Files", nil);
+    [hud showInView:self.view];
+    hud.activityIndicatorOn = YES;
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            
-            NSError *error;
-            NSUInteger index;
-            if (checkReachableAtPath(_currentEntity.filePath)) {
-                [[NSFileManager defaultManager] removeItemAtPath:_currentEntity.filePath error:&error];
-                if (error) {
-                    NSLog(@"%@", error);
-                }
-                index = [_myParentController.objects indexOfObject:_currentEntity];
-                [_myParentController.objects removeObject:_currentEntity];
+        NSError *error;
+        NSUInteger index;
+        if (checkReachableAtPath(_currentEntity.filePath)) {
+            [[NSFileManager defaultManager] removeItemAtPath:_currentEntity.filePath error:&error];
+            if (error) {
+                NSLog(@"%@", error);
             }
+            index = [_myParentController.objects indexOfObject:_currentEntity];
+            [_myParentController.objects removeObject:_currentEntity];
+        }
+        
+        _currentEntity = nil;
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
             
-            _currentEntity = nil;
+            [self.tableView deleteRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:index inSection:0]] withRowAnimation:UITableViewRowAnimationAutomatic];
             
-            dispatch_async(dispatch_get_main_queue(), ^{
-                
-                [self.tableView deleteRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:index inSection:0]] withRowAnimation:UITableViewRowAnimationAutomatic];
-                
-                [hud hideWithAnimation:HUDAnimationNone];
-                
-                hud = nil;
-                [self showHudWithMessage:NSLocalizedString(@"Deleted", nil) iconName:@"operation_done"];
-            });
+            [hud hideWithAnimation:HUDAnimationNone];
+            
+            hud = nil;
+            [self showHudWithMessage:NSLocalizedString(@"Deleted", nil) iconName:@"operation_done"];
         });
+    });
+
+}
+
+- (void)operateFile:(id)sender {
+    
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:_myParentController action:@selector(addNewDirectory:)];
+    
+    [_myParentController layoutTitleViewForSegment:NO];
+    _myParentController.textLabel.text = NSLocalizedString(@"Choose Destination", nil);
+    self.navigationItem.rightBarButtonItem = nil;
+    [self.tabBarController hideTabBarAnimated:YES];
+    _editingToolbar = [[UIToolbar alloc] init];
+    _editingToolbar.translatesAutoresizingMaskIntoConstraints = NO;
+    _editingToolbar.translucent = YES;
+    _editingToolbar.barStyle = UIBarStyleDefault;
+    [self.tabBarController.view addSubview:_editingToolbar];
+    
+    UIBarButtonItem *actionButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Put", nil) style:UIBarButtonItemStyleBordered target:self action:@selector(destinationDidSelected:)];
+    UIBarButtonItem *cancelButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Cancel", nil) style:UIBarButtonItemStyleBordered target:self action:@selector(cancelAction:)];
+    
+    _editingToolbar.items = @[cancelButtonItem,
+                              [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                              actionButtonItem];
+    
+    NSDictionary *views = NSDictionaryOfVariableBindings(_editingToolbar);
+    [self.tabBarController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_editingToolbar]|" options:kNilOptions metrics:nil views:views]];
+    [self.tabBarController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_editingToolbar(==44.0)]|" options:kNilOptions metrics:nil views:views]];
+}
+
+- (void)renameFile:(id)sender {
+    UIAlertView *alertView = [[UIAlertView alloc] init];
+    alertView.message = NSLocalizedString(@"Please Input New Name", nil);
+    alertView.alertViewStyle = UIAlertViewStylePlainTextInput;
+    [alertView addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
+    [alertView addButtonWithTitle:NSLocalizedString(@"Rename", nil)];
+    alertView.cancelButtonIndex = 0;
+    
+    [UTAlertViewDelegate showAlertView:alertView withCallback:^(NSInteger buttonIndex) {
+        if (buttonIndex != alertView.cancelButtonIndex) {
+            NSError *error;
+            NSString *newName = [alertView textFieldAtIndex:0].text;
+            NSString *newPath = [[_currentEntity.filePath stringByDeletingLastPathComponent] stringByAppendingFormat:@"/%@", newName];
+            [[NSFileManager defaultManager] moveItemAtPath:_currentEntity.filePath toPath:newPath error:&error];
+            
+            if (!error) {
+                _currentEntity.fileName = newName;
+                _currentEntity.filePath = newPath;
+                [self.tableView reloadRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:[_myParentController.objects indexOfObject:_currentEntity] inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
+                _currentEntity = nil;
+            }
+        }
+    }];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (_action == UTActionDelete && buttonIndex == actionSheet.destructiveButtonIndex) {
+        
+        [self deleteSelectedFile:actionSheet];
+        
+    } else if (buttonIndex != actionSheet.cancelButtonIndex) {
+        switch (buttonIndex) {
+            case 0:
+                _action = UTActionMove;
+                [self operateFile:actionSheet];
+                break;
+                
+            case 1:
+                _action = UTActionCopy;
+                [self operateFile:actionSheet];
+                break;
+                
+            case 2:
+                _action = UTActionRename;
+                [self renameFile:actionSheet];
+                break;
+                
+            case 3: {
+                
+                _action = UTActionDelete;
+                
+                UIActionSheet *sheet = [[UIActionSheet alloc] init];
+                
+                sheet.title = [NSString stringWithFormat:NSLocalizedString(@"Do you want to delete %@", nil), _currentEntity.fileName];
+                sheet.delegate = self;
+                sheet.actionSheetStyle = UIActionSheetStyleDefault;
+                
+                [sheet addButtonWithTitle:NSLocalizedString(@"Delete", nil)];
+                [sheet addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
+                
+                sheet.cancelButtonIndex = 1;
+                
+                sheet.destructiveButtonIndex = 0;
+                
+                [sheet showFromTabBar:self.tabBarController.tabBar];
+                
+                break;
+            }
+            default:
+                break;
+        }
+        
     }
+}
+
+- (void)destinationDidSelected:(id)sender {
+    
+    [_myParentController.selectedItems addObject:[NSNumber numberWithInteger:[_myParentController.objects indexOfObject:_currentEntity]]];
+    [_myParentController.selectedItemsFilePaths addObject:_currentEntity.filePath];
+    
+    if (_currentEntity.type == UTFinderImageType) {
+        [_myParentController.dirImages addObject:[UTFinderEntity imageWithFilePath:_currentEntity.filePath scaledToWidth:50.0f]];
+    } else {
+        [_myParentController.dirImages addObject:_currentEntity.typeImage];
+    }
+    
+    _myParentController.action = _action;
+    [_myParentController operateItems:sender action:_action];
+}
+
+- (void)cancelAction:(id)sender {
+    [self hideToolBar];
+    
+    _myParentController.selectedItemPath = [_rawPath stringByDeletingLastPathComponent];
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        [self refreshCurrentFolder];
+        
+    });
+    
 }
 
 - (void)showHudWithMessage:(NSString *)message iconName:(NSString *)name {
