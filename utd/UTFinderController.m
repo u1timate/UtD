@@ -82,8 +82,6 @@
 
 - (void)awakeFromNib {
     
-
-    
     [self layoutTitleViewForSegment:YES];
     
 }

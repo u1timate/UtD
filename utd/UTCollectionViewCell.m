@@ -21,7 +21,7 @@
         self.textField = [[UILabel alloc] initWithFrame:CGRectMake(5, 75, 70, 18)];
         self.textField.textAlignment = NSTextAlignmentCenter;
         self.textField.font = [UIFont systemFontOfSize:14];
-        self.textField.lineBreakMode = NSLineBreakByTruncatingMiddle;
+        self.textField.lineBreakMode = NSLineBreakByTruncatingTail;
         
         [self.contentView addSubview:self.textField];
         

@@ -42,11 +42,13 @@
     
     _myParentController.segment.selectedSegmentIndex = [[NSUserDefaults standardUserDefaults] integerForKey:kUTDefaultFinderStyle];
     
+    [self.collectionView registerClass:[UTCollectionViewCell class] forCellWithReuseIdentifier:@"FinderCollectionCell"];
+    
     [self addHeader];
     
-    [self.collectionView registerClass:[UTCollectionViewCell class] forCellWithReuseIdentifier:@"FinderCollectionCell"];
-        
-    [self refreshCurrentFolder];
+    if (_myParentController.objects.count < 1) {
+        [self refreshCurrentFolder];
+    }
 }
 
 - (void)addHeader
@@ -134,6 +136,8 @@
             
             [indicator stopAnimating];
             indicator = nil;
+            
+            [self.collectionView headerEndRefreshing];
             [self setLeftBarItem];
         });
     });
@@ -174,12 +178,17 @@
         
         [_myParentController layoutTitleViewForSegment:NO];
         
-		[self.tabBarController hideTabBarAnimated:NO];
+		//[self.tabBarController hideTabBarAnimated:NO];
 		_editingToolbar = [[UIToolbar alloc] init];
 		_editingToolbar.translatesAutoresizingMaskIntoConstraints = NO;
 		_editingToolbar.translucent = YES;
         _editingToolbar.barStyle = UIBarStyleDefault;
-		[self.tabBarController.view addSubview:_editingToolbar];
+        _editingToolbar.alpha = 0.0f;
+		[self.navigationController.view addSubview:_editingToolbar];
+        
+        [UIView animateWithDuration:0.3f delay:0.0f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+            _editingToolbar.alpha = 1.0f;
+        } completion:nil];
         
         UIBarButtonItem *deleteButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Delete", nil) style:UIBarButtonItemStyleBordered target:_myParentController action:@selector(deleteItems:)];
         deleteButtonItem.tintColor = [UIColor redColor];
@@ -196,8 +205,8 @@
                                   renameButtonItem];
         
 		NSDictionary *views = NSDictionaryOfVariableBindings(_editingToolbar);
-		[self.tabBarController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_editingToolbar]|" options:kNilOptions metrics:nil views:views]];
-		[self.tabBarController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_editingToolbar(==44.0)]|" options:kNilOptions metrics:nil views:views]];
+		[self.navigationController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_editingToolbar]|" options:kNilOptions metrics:nil views:views]];
+		[self.navigationController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_editingToolbar(==44.0)]|" options:kNilOptions metrics:nil views:views]];
         
 		_myParentController.selectedItems = [NSMutableArray array];
         _myParentController.selectedItemsFilePaths = [NSMutableArray array];
@@ -213,7 +222,7 @@
         
         [self setLeftBarItem];
         
-        [self.tabBarController showTabBarAnimated:NO];
+        //[self.tabBarController showTabBarAnimated:NO];
         [_editingToolbar removeFromSuperview];
         [_myParentController layoutTitleViewForSegment:YES];
         
@@ -221,7 +230,7 @@
         _myParentController.selectedItems = nil;
         _myParentController.selectedItemsFilePaths = nil;
 	}
-    
+    [self.collectionView reloadItemsAtIndexPaths:self.collectionView.indexPathsForVisibleItems];
     [_myParentController layoutTitleViewForSegment:!_myParentController.isEditing];
 }
 
@@ -253,7 +262,13 @@
     
     UTFinderEntity *entity = _myParentController.objects[indexPath.row];
     
-    cell.textField.text = entity.fileName;
+    if (entity.fileName.length > 6) {
+        cell.textField.text = [[entity.fileName substringToIndex:6] stringByAppendingString:@".."];
+    } else {
+        cell.textField.text = entity.fileName;
+    }
+    
+    
     
     cell.imageView.image = entity.typeImage;
     
@@ -273,8 +288,7 @@
             cell.button.adjustsImageWhenHighlighted = NO;
             
             cell.button.frame = CGRectMake(0, 0, 44, 44);
-            float x = cell.imageView.center.y;
-            cell.button.center = CGPointMake(x, x);
+            cell.button.center = CGPointMake(62, 64);
             
             [cell.button addTarget:self action:@selector(selectedButtonTapped:event:) forControlEvents:UIControlEventTouchUpInside];
             
@@ -283,8 +297,10 @@
         
         if ([_myParentController.selectedItems containsObject:[NSNumber numberWithInteger:indexPath.row]]) {
             cell.button.selected = YES;
+            cell.backgroundColor = [UIColor colorWithRed:(float)232/255 green:(float)240/255 blue:(float)250/255 alpha:1.0f];
         } else {
             cell.button.selected = NO;
+            cell.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:1.0f];
         }
         
     } else {
@@ -306,12 +322,17 @@
     
     NSUInteger index = [[self.collectionView indexPathForItemAtPoint:currentTouchPosition] row];
     
+    UTCollectionViewCell *cell = (UTCollectionViewCell *)[self.collectionView cellForItemAtIndexPath:[NSIndexPath indexPathForItem:index inSection:0]];
+    
+    
     if ([sender isSelected]) {
         [_myParentController.selectedItems addObject:[NSNumber numberWithInteger:index]];
         [_myParentController.selectedItemsFilePaths addObject:[[_myParentController.objects objectAtIndex:index] filePath]];
+        cell.backgroundColor = [UIColor colorWithRed:(float)232/255 green:(float)240/255 blue:(float)250/255 alpha:1.0f];
     } else {
         [_myParentController.selectedItems removeObject:[NSNumber numberWithInteger:index]];
         [_myParentController.selectedItemsFilePaths removeObject:[[_myParentController.objects objectAtIndex:index] filePath]];
+        cell.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:1.0f];
     }
     
     NSUInteger count = [_myParentController.selectedItems count];
@@ -378,9 +399,11 @@
         if ([cell.button isSelected]) {
             [_myParentController.selectedItems addObject:[NSNumber numberWithInteger:indexPath.row]];
             [_myParentController.selectedItemsFilePaths addObject:[[_myParentController.objects objectAtIndex:indexPath.row] filePath]];
+            cell.backgroundColor = [UIColor colorWithRed:(float)232/255 green:(float)240/255 blue:(float)250/255 alpha:1.0f];
         } else {
             [_myParentController.selectedItems removeObject:[NSNumber numberWithInteger:indexPath.row]];
             [_myParentController.selectedItemsFilePaths removeObject:[[_myParentController.objects objectAtIndex:indexPath.row] filePath]];
+            cell.backgroundColor = [UIColor colorWithRed:1 green:1 blue:1 alpha:1.0f];
         }
         
         NSUInteger count = [_myParentController.selectedItems count];

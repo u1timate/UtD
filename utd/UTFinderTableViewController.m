@@ -10,7 +10,7 @@
 
 #import "UTFinderEntity.h"
 #import "MJRefresh.h"
-#import "UITabBarController+UTTabBarController.h"
+//#import "UITabBarController+UTTabBarController.h"
 #import "LGViewHUD.h"
 #import "UTAlertViewDelegate.h"
 
@@ -47,7 +47,9 @@
     
     [self addHeader];
     
-    [self refreshCurrentFolder];
+    if (_myParentController.objects.count < 1) {
+        [self refreshCurrentFolder];
+    }
 }
 
 - (void)setLeftBarItem {
@@ -62,7 +64,8 @@
 - (void)hideToolBar {
     self.navigationItem.rightBarButtonItem = self.editButtonItem;
     [self setLeftBarItem];
-    [self.tabBarController showTabBarAnimated:NO];
+    //[self.tabBarController showTabBarAnimated:NO];
+    
     [_editingToolbar removeFromSuperview];
     [_myParentController layoutTitleViewForSegment:YES];
     
@@ -170,48 +173,53 @@
     _myParentController.isEditing = editing;
     
     if (editing) {
-            self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:_myParentController action:@selector(shareAction:)];
-            
-            [_myParentController layoutTitleViewForSegment:NO];
-            
-            [self.tabBarController hideTabBarAnimated:YES];
-            _editingToolbar = [[UIToolbar alloc] init];
-            _editingToolbar.translatesAutoresizingMaskIntoConstraints = NO;
-            _editingToolbar.translucent = YES;
-            _editingToolbar.barStyle = UIBarStyleDefault;
-            [self.tabBarController.view addSubview:_editingToolbar];
-            
-            UIBarButtonItem *deleteButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Delete", nil) style:UIBarButtonItemStyleBordered target:_myParentController action:@selector(deleteItems:)];
-            deleteButtonItem.tintColor = [UIColor redColor];
-            UIBarButtonItem *moveButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Move", nil) style:UIBarButtonItemStyleBordered target:_myParentController action:@selector(moveItems:)];
-            UIBarButtonItem *copyButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Copy", nil) style:UIBarButtonItemStyleBordered target:_myParentController action:@selector(copyItems:)];
-            UIBarButtonItem *renameButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Rename", nil) style:UIBarButtonItemStyleBordered target:_myParentController action:@selector(renameItems:)];
-            
-            _editingToolbar.items = @[deleteButtonItem,
-                                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
-                                      moveButtonItem,
-                                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
-                                      copyButtonItem,
-                                      [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
-                                      renameButtonItem];
-            
-            NSDictionary *views = NSDictionaryOfVariableBindings(_editingToolbar);
-            [self.tabBarController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_editingToolbar]|" options:kNilOptions metrics:nil views:views]];
-            [self.tabBarController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_editingToolbar(==44.0)]|" options:kNilOptions metrics:nil views:views]];
-            
-            _myParentController.selectedItems = [NSMutableArray array];
-            _myParentController.selectedItemsFilePaths = [NSMutableArray array];
-            [(UIBarButtonItem *)_editingToolbar.items[0] setEnabled:NO];
-            [(UIBarButtonItem *)_editingToolbar.items[2] setEnabled:NO];
-            [(UIBarButtonItem *)_editingToolbar.items[4] setEnabled:NO];
-            [(UIBarButtonItem *)_editingToolbar.items[6] setEnabled:NO];
-            
-            _editingToolbar.delegate = _myParentController;
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:_myParentController action:@selector(shareAction:)];
+        
+        [_myParentController layoutTitleViewForSegment:NO];
+        
+        //[self.tabBarController hideTabBarAnimated:YES];
+        _editingToolbar = [[UIToolbar alloc] init];
+        _editingToolbar.translatesAutoresizingMaskIntoConstraints = NO;
+        _editingToolbar.translucent = YES;
+        _editingToolbar.barStyle = UIBarStyleDefault;
+        _editingToolbar.alpha = 0.0f;
+        [self.navigationController.view addSubview:_editingToolbar];
+        
+        [UIView animateWithDuration:0.3f delay:0.0f options:UIViewAnimationOptionCurveEaseInOut animations:^{
+            _editingToolbar.alpha = 1.0f;
+        } completion:nil];
+        
+        UIBarButtonItem *deleteButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Delete", nil) style:UIBarButtonItemStyleBordered target:_myParentController action:@selector(deleteItems:)];
+        deleteButtonItem.tintColor = [UIColor redColor];
+        UIBarButtonItem *moveButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Move", nil) style:UIBarButtonItemStyleBordered target:_myParentController action:@selector(moveItems:)];
+        UIBarButtonItem *copyButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Copy", nil) style:UIBarButtonItemStyleBordered target:_myParentController action:@selector(copyItems:)];
+        UIBarButtonItem *renameButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Rename", nil) style:UIBarButtonItemStyleBordered target:_myParentController action:@selector(renameItems:)];
+        
+        _editingToolbar.items = @[deleteButtonItem,
+                                  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                                  moveButtonItem,
+                                  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                                  copyButtonItem,
+                                  [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil],
+                                  renameButtonItem];
+        
+        NSDictionary *views = NSDictionaryOfVariableBindings(_editingToolbar);
+        [self.navigationController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_editingToolbar]|" options:kNilOptions metrics:nil views:views]];
+        [self.navigationController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_editingToolbar(==44.0)]|" options:kNilOptions metrics:nil views:views]];
+        
+        _myParentController.selectedItems = [NSMutableArray array];
+        _myParentController.selectedItemsFilePaths = [NSMutableArray array];
+        [(UIBarButtonItem *)_editingToolbar.items[0] setEnabled:NO];
+        [(UIBarButtonItem *)_editingToolbar.items[2] setEnabled:NO];
+        [(UIBarButtonItem *)_editingToolbar.items[4] setEnabled:NO];
+        [(UIBarButtonItem *)_editingToolbar.items[6] setEnabled:NO];
+        
+        _editingToolbar.delegate = _myParentController;
         
     } else {
         if (!_myParentController.lockForAction) {
             [self setLeftBarItem];
-            [self.tabBarController showTabBarAnimated:NO];
+            //[self.tabBarController showTabBarAnimated:NO];
             [_editingToolbar removeFromSuperview];
             [_myParentController layoutTitleViewForSegment:YES];
             
@@ -427,7 +435,9 @@
         sheet.destructiveButtonIndex = 3;
         sheet.cancelButtonIndex = 4;
         
-        [sheet showFromTabBar:self.tabBarController.tabBar];
+        [sheet showFromRect:CGRectMake([[UIScreen mainScreen] bounds].size.width/2, [[UIScreen mainScreen] bounds].size.height, 0, 0) inView:self.view animated:YES];
+        
+        //[sheet showFromTabBar:self.tabBarController.tabBar];
         
 #warning More的index
     } else if (index == 1) {
@@ -452,7 +462,9 @@
         
         sheet.destructiveButtonIndex = 0;
         
-        [sheet showFromTabBar:self.tabBarController.tabBar];
+        [sheet showFromRect:CGRectMake([[UIScreen mainScreen] bounds].size.width/2, [[UIScreen mainScreen] bounds].size.height, 0, 0) inView:self.view animated:YES];
+        
+        //[sheet showFromTabBar:self.tabBarController.tabBar];
         
     }
 }
@@ -510,12 +522,12 @@
     [_myParentController layoutTitleViewForSegment:NO];
     _myParentController.textLabel.text = NSLocalizedString(@"Choose Destination", nil);
     self.navigationItem.rightBarButtonItem = nil;
-    [self.tabBarController hideTabBarAnimated:YES];
+    //[self.tabBarController hideTabBarAnimated:YES];
     _editingToolbar = [[UIToolbar alloc] init];
     _editingToolbar.translatesAutoresizingMaskIntoConstraints = NO;
     _editingToolbar.translucent = YES;
     _editingToolbar.barStyle = UIBarStyleDefault;
-    [self.tabBarController.view addSubview:_editingToolbar];
+    [self.navigationController.view addSubview:_editingToolbar];
     
     UIBarButtonItem *actionButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Put", nil) style:UIBarButtonItemStyleBordered target:self action:@selector(destinationDidSelected:)];
     UIBarButtonItem *cancelButtonItem = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Cancel", nil) style:UIBarButtonItemStyleBordered target:self action:@selector(cancelAction:)];
@@ -525,8 +537,8 @@
                               actionButtonItem];
     
     NSDictionary *views = NSDictionaryOfVariableBindings(_editingToolbar);
-    [self.tabBarController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_editingToolbar]|" options:kNilOptions metrics:nil views:views]];
-    [self.tabBarController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_editingToolbar(==44.0)]|" options:kNilOptions metrics:nil views:views]];
+    [self.navigationController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_editingToolbar]|" options:kNilOptions metrics:nil views:views]];
+    [self.navigationController.view addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:[_editingToolbar(==44.0)]|" options:kNilOptions metrics:nil views:views]];
 }
 
 - (void)renameFile:(id)sender {
@@ -593,7 +605,9 @@
                 
                 sheet.destructiveButtonIndex = 0;
                 
-                [sheet showFromTabBar:self.tabBarController.tabBar];
+                [sheet showFromRect:CGRectMake([[UIScreen mainScreen] bounds].size.width/2, [[UIScreen mainScreen] bounds].size.height, 0, 0) inView:self.view animated:YES];
+                
+                //[sheet showFromTabBar:self.tabBarController.tabBar];
                 
                 break;
             }

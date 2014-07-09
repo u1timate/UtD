@@ -9,6 +9,8 @@
 #import "UTAppDelegate.h"
 
 #import "UTFinderTabBarController.h"
+#import "UTFinderController.h"
+
 
 @implementation UTAppDelegate
 
@@ -30,9 +32,14 @@
     
     // formal code
     
+    
+    UTFinderStyle style = [[NSUserDefaults standardUserDefaults] integerForKey:kUTDefaultFinderStyle];
+    
+    UTFinderController *finderController = [[UTFinderController alloc] initWithFinderStyle:style];
+    
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor whiteColor];
-	self.window.rootViewController = [[UTFinderTabBarController alloc] init];
+	self.window.rootViewController = finderController.navigationController;
     [self.window makeKeyAndVisible];
     
     return YES;
