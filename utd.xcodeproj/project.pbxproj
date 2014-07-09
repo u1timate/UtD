@@ -85,6 +85,9 @@
 		3BBC284C1951D1CE006AD56B /* UIImageView+WebCache.m in Sources */ = {isa = PBXBuildFile; fileRef = 3BBC281E1951D1CE006AD56B /* UIImageView+WebCache.m */; };
 		3BBC284D1951D1CE006AD56B /* MWPhotoBrowser.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 3BBC281F1951D1CE006AD56B /* MWPhotoBrowser.bundle */; };
 		3BF7E12D1939A6D9001AC831 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3BF7E12C1939A6D9001AC831 /* MobileCoreServices.framework */; };
+		DF585FF9196CEEE900F2D665 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = DF585FF2196CEEE900F2D665 /* InfoPlist.strings */; };
+		DF585FFA196CEEE900F2D665 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DF585FF4196CEEE900F2D665 /* Localizable.strings */; };
+		DF585FFB196CEEE900F2D665 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = DF585FF7196CEEE900F2D665 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -248,6 +251,9 @@
 		3BBC281E1951D1CE006AD56B /* UIImageView+WebCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImageView+WebCache.m"; sourceTree = "<group>"; };
 		3BBC281F1951D1CE006AD56B /* MWPhotoBrowser.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = MWPhotoBrowser.bundle; sourceTree = "<group>"; };
 		3BF7E12C1939A6D9001AC831 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
+		DF585FF3196CEEE900F2D665 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = InfoPlist.strings; sourceTree = "<group>"; };
+		DF585FF5196CEEE900F2D665 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Localizable.strings; sourceTree = "<group>"; };
+		DF585FF8196CEEE900F2D665 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -344,6 +350,8 @@
 		3B1EA6371938DBDA001D4327 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				DF585FF1196CEEE900F2D665 /* en.lproj */,
+				DF585FF6196CEEE900F2D665 /* zh-Hans.lproj */,
 				3B1EA6381938DBDA001D4327 /* utd-Info.plist */,
 				3B1EA6391938DBDA001D4327 /* InfoPlist.strings */,
 				3B1EA63C1938DBDA001D4327 /* main.m */,
@@ -583,6 +591,23 @@
 			path = SDWebImage;
 			sourceTree = "<group>";
 		};
+		DF585FF1196CEEE900F2D665 /* en.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				DF585FF2196CEEE900F2D665 /* InfoPlist.strings */,
+				DF585FF4196CEEE900F2D665 /* Localizable.strings */,
+			);
+			path = en.lproj;
+			sourceTree = "<group>";
+		};
+		DF585FF6196CEEE900F2D665 /* zh-Hans.lproj */ = {
+			isa = PBXGroup;
+			children = (
+				DF585FF7196CEEE900F2D665 /* Localizable.strings */,
+			);
+			path = "zh-Hans.lproj";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -646,6 +671,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"zh-Hans",
 			);
 			mainGroup = 3B1EA6241938DBDA001D4327;
 			productRefGroup = 3B1EA62E1938DBDA001D4327 /* Products */;
@@ -664,9 +690,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				3BBC283C1951D1CE006AD56B /* README.md in Resources */,
+				DF585FF9196CEEE900F2D665 /* InfoPlist.strings in Resources */,
 				3B1EA6491938DBDA001D4327 /* Images.xcassets in Resources */,
 				3BBC282D1951D1CE006AD56B /* README.mdown in Resources */,
+				DF585FFB196CEEE900F2D665 /* Localizable.strings in Resources */,
 				3BBC284D1951D1CE006AD56B /* MWPhotoBrowser.bundle in Resources */,
+				DF585FFA196CEEE900F2D665 /* Localizable.strings in Resources */,
 				3B1EA63B1938DBDA001D4327 /* InfoPlist.strings in Resources */,
 				3BBC283B1951D1CE006AD56B /* LICENSE in Resources */,
 			);
@@ -786,6 +815,30 @@
 				3B1EA6591938DBDA001D4327 /* en */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		DF585FF2196CEEE900F2D665 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DF585FF3196CEEE900F2D665 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		DF585FF4196CEEE900F2D665 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DF585FF5196CEEE900F2D665 /* en */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		DF585FF7196CEEE900F2D665 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				DF585FF8196CEEE900F2D665 /* zh-Hans */,
+			);
+			name = Localizable.strings;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
