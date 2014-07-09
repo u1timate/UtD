@@ -32,8 +32,7 @@
     
     // formal code
     
-    
-    UTFinderStyle style = [[NSUserDefaults standardUserDefaults] integerForKey:kUTDefaultFinderStyle];
+    UTFinderStyle style = (UTFinderStyle)[[NSUserDefaults standardUserDefaults] integerForKey:kUTDefaultFinderStyle];
     
     UTFinderController *finderController = [[UTFinderController alloc] initWithFinderStyle:style];
     

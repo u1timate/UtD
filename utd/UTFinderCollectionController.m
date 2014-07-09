@@ -121,10 +121,10 @@
         _myParentController.photos = [[NSMutableArray alloc] initWithCapacity:0];
         
         for (UTFinderEntity *entity in _myParentController.objects) {
-            if (entity.type == UTFinderImageType) {
-                [_myParentController.dirImages addObject:[UTFinderEntity imageWithFilePath:entity.filePath scaledToWidth:70.0f]];
+            if ([[NSUserDefaults standardUserDefaults] boolForKey:kUTDefaultShowImagePreview] && entity.type == UTFinderImageType) {
+                [_myParentController.dirImages addObject:[UTFinderEntity imageWithFilePath:entity.filePath scaledToWidth:50.0f]];
             } else {
-                [_myParentController.dirImages addObject:entity.typeImage];
+                [_myParentController.dirImages addObject:[UTFinderEntity imageWithUIImage:entity.typeImage scaledToWidth:50.0f]];
             }
         }
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -268,11 +268,9 @@
         cell.textField.text = entity.fileName;
     }
     
-    
-    
     cell.imageView.image = entity.typeImage;
     
-    if (entity.type ==  UTFinderImageType) {
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:kUTDefaultShowImagePreview] && entity.type ==  UTFinderImageType) {
         dispatch_async(dispatch_get_main_queue(), ^{
             cell.imageView.image = _myParentController.dirImages[indexPath.row];
         });

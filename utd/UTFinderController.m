@@ -77,7 +77,8 @@
 
 + (void)initialize {
     [[NSUserDefaults standardUserDefaults] registerDefaults:@{kUTDefaultFinderStyle : [NSNumber numberWithInteger:UTFinderLayoutTableStyle],
-                                                              kUTDefaultPullToRefresh: @YES}];
+                                                              kUTDefaultPullToRefresh: @YES,
+                                                              kUTDefaultShowImagePreview: @NO}];
 }
 
 - (void)awakeFromNib {
@@ -224,10 +225,9 @@ BOOL checkReachableAtPath(NSString *path) {
                 }
                 
                 UTFinderEntity *entity = [[UTFinderEntity alloc] init];
-                entity.fileName = dirname;
+                
                 entity.filePath = [_documentPath stringByAppendingFormat:@"/%@", dirname];
-#warning 新建文件夹属性？
-                entity.fileAttrs = @"Some Attributes";
+                
                 [_objects addObject:entity];
                 
                 switch (_currentFinderStyle) {
@@ -438,10 +438,8 @@ BOOL checkReachableAtPath(NSString *path) {
                         }
                         
                         UTFinderEntity *entity = [[UTFinderEntity alloc] init];
-                        entity.fileName = fileName;
+                        
                         entity.filePath = [_selectedItemPath stringByAppendingFormat:@"/%@", fileName];
-#warning 移动的文件属性
-                        entity.fileAttrs = @"Some Attributes";
                         
                         [_objects addObject:entity];
                         
@@ -491,10 +489,8 @@ BOOL checkReachableAtPath(NSString *path) {
                         }
                         
                         UTFinderEntity *entity = [[UTFinderEntity alloc] init];
-                        entity.fileName = fileName;
+                        
                         entity.filePath = [_selectedItemPath stringByAppendingFormat:@"/%@", fileName];
-#warning 复制的文件属性
-                        entity.fileAttrs = @"Some Attributes";
                         
                         [_objects addObject:entity];
                         
@@ -563,9 +559,6 @@ BOOL checkReachableAtPath(NSString *path) {
                     [[NSFileManager defaultManager] moveItemAtPath:filePath toPath:newPath error:&error];
                     
                     entity.filePath = newPath;
-                    entity.fileName = newDir;
-#warning 获取新文件的属性
-                    entity.fileAttrs = @"Some New Attrs";
                     
                     if (error) {
                         NSLog(@"%@", error);
@@ -610,9 +603,6 @@ BOOL checkReachableAtPath(NSString *path) {
                     [[NSFileManager defaultManager] moveItemAtPath:filePath toPath:newPath error:&error];
                     
                     entity.filePath = newPath;
-                    entity.fileName = newDir;
-#warning 获取新文件的属性
-                    entity.fileAttrs = @"Some New Attributes";
                     
                     if (error) {
                         NSLog(@"%@", error);

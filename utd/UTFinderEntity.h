@@ -25,5 +25,6 @@
 + (NSArray *)generateFilesInPath:(NSString *)path;
 
 + (UIImage *)imageWithFilePath:(NSString *)filePath scaledToWidth:(float)i_width;
++ (UIImage *)imageWithUIImage:(UIImage *)sourceImage scaledToWidth:(float)i_width;
 
 @end

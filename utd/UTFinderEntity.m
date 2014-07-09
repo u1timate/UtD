@@ -12,43 +12,51 @@
 
 - (void)setFilePath:(NSString *)filePath {
     if (_filePath != filePath) {
+        _fileName = [[filePath componentsSeparatedByString:@"/"] lastObject];
         _filePath = filePath;
         _type = [self typeForPath:filePath];
-        _typeImage = [self imageForUTType:_type];
+        _typeImage = [self imageForFileExtension:[[_fileName componentsSeparatedByString:@"."] lastObject] withUTType:_type];
+        _fileAttrs = [self attributesForPath:filePath];
     }
 }
 
-- (UIImage *)imageForUTType:(UTFinderFileType)type {
-    switch (type) {
-            
-        case UTFinderGoUpType:
-            return [UIImage imageNamed:@"Up"];
-            break;
-            
-        case UTFinderFolderType:
-            return [UIImage imageNamed:@"folder"];
-            break;
-            
-        case UTFinderImageType:
-            return [UIImage imageNamed:@"images"];
-            break;
-            
-        case UTFinderAudioType:
-            return [UIImage imageNamed:@"music"];
-            break;
-            
-        case UTFinderMovieType:
-            return [UIImage imageNamed:@"movie"];
-            break;
-        
-        case UTFinderTextType:
-            return [UIImage imageNamed:@"text"];
-            
-        default:
-            return [UIImage imageNamed:@"unknown"];
-            break;
-    }
+- (NSString *)attributesForPath:(NSString *)filePath {
+    return @"Some Attributes";
 }
+
+- (UIImage *)imageForFileExtension:(NSString *)fileExtension withUTType:(UTFinderFileType)fileType {
+    UIImage *testImage = [UIImage imageNamed:[NSString stringWithFormat:@"file_%@", fileExtension]];
+    
+    if (!testImage) {
+        switch (fileType) {
+                
+            case UTFinderFolderType:
+                return [UIImage imageNamed:@"folder"];
+                break;
+                
+            case UTFinderImageType:
+                return [UIImage imageNamed:@"images"];
+                break;
+                
+            case UTFinderAudioType:
+                return [UIImage imageNamed:@"music"];
+                break;
+                
+            case UTFinderMovieType:
+                return [UIImage imageNamed:@"movie"];
+                break;
+                
+            case UTFinderTextType:
+                return [UIImage imageNamed:@"file_text"];
+                
+            default:
+                return [UIImage imageNamed:@"unknown"];
+                break;
+        }
+    }
+    return testImage;
+}
+
 
 - (UTFinderFileType)typeForPath:(NSString *)path{
     
@@ -97,9 +105,12 @@
     return array;
 }
 
-+ (UIImage*)imageWithFilePath:(NSString *)filePath scaledToWidth:(float)i_width {
++ (UIImage *)imageWithFilePath:(NSString *)filePath scaledToWidth:(float)i_width {
     
-    UIImage *sourceImage = [UIImage imageWithContentsOfFile:filePath];
+    return [UTFinderEntity imageWithUIImage:[UIImage imageWithContentsOfFile:filePath] scaledToWidth:i_width];
+}
+
++ (UIImage *)imageWithUIImage:(UIImage *)sourceImage scaledToWidth:(float)i_width {
     
     float oldWidth = sourceImage.size.width;
     float scaleFactor = i_width / oldWidth;
