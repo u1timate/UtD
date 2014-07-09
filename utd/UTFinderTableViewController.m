@@ -442,7 +442,6 @@
         
         //[sheet showFromTabBar:self.tabBarController.tabBar];
         
-#warning More的index
     } else if (index == 1) {
         
         [cell hideUtilityButtonsAnimated:YES];

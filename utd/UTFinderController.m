@@ -288,6 +288,7 @@ BOOL checkReachableAtPath(NSString *path) {
     if (_selectedItems.count < 1) {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"You must choose at least one item.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
         [alert show];
+        return;
     }
     
     if (![[sender title] isEqualToString:NSLocalizedString(@"Put", nil)]) {
