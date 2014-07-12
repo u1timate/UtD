@@ -70,7 +70,7 @@
     [_myParentController layoutTitleViewForSegment:YES];
     
     _editingToolbar = nil;
-    _myParentController.selectedItems = nil;
+    _myParentController.selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
     _myParentController.selectedItemsFilePaths = nil;
 }
 
@@ -224,7 +224,7 @@
             [_myParentController layoutTitleViewForSegment:YES];
             
             _editingToolbar = nil;
-            _myParentController.selectedItems = nil;
+            _myParentController.selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
             _myParentController.selectedItemsFilePaths = nil;
         } else {
             [self setLeftBarItem];
@@ -416,7 +416,6 @@
     
     if (index == 0) {
         [cell hideUtilityButtonsAnimated:YES];
-        _action = UTActionMore;
         
         NSUInteger index = [self.tableView indexPathForCell:cell].row;
         
@@ -559,10 +558,10 @@
             [[NSFileManager defaultManager] moveItemAtPath:_currentEntity.filePath toPath:newPath error:&error];
             
             if (!error) {
-                _currentEntity.fileName = newName;
+                
                 _currentEntity.filePath = newPath;
                 [self.tableView reloadRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:[_myParentController.objects indexOfObject:_currentEntity] inSection:0]] withRowAnimation:UITableViewRowAnimationNone];
-                _currentEntity = nil;
+                
             }
         }
     }];

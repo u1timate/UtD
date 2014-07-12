@@ -35,8 +35,16 @@ typedef enum {
     UTActionCopy = 1,
     UTActionMove = 2,
     UTActionRename = 3,
-    UTActionMore = 4
+    UTActionDuplicatedFile = 4
 } UTActionIdentifier;
+
+typedef enum {
+    UTDuplicateRename = 0,
+    UTDuplicateOverWrite = 1,
+    UTDuplicateKeepBoth = 2,
+    UTDuplicateKeepOriginalFile = 3,
+    UTDuplicateCancel = 4
+} UTDuplicatedFileAction;
 
 #define kUTDefaultFinderStyle @"UTDefaultFinderViewStyle"
 #define kUTDefaultPullToRefresh @"UTDefaultPullToRefreshCurrentFolderContents"

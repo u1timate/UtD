@@ -227,7 +227,7 @@
         [_myParentController layoutTitleViewForSegment:YES];
         
         _editingToolbar = nil;
-        _myParentController.selectedItems = nil;
+        _myParentController.selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
         _myParentController.selectedItemsFilePaths = nil;
 	}
     [self.collectionView reloadItemsAtIndexPaths:self.collectionView.indexPathsForVisibleItems];

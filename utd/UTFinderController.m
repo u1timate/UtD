@@ -24,6 +24,9 @@
 
 @implementation UTFinderController {
     UTFinderStyle _currentFinderStyle;
+    NSString *_currentOriginalFilePath;
+    NSString *_toFilePath;
+    dispatch_queue_t _actionQueue;
 }
 
 - (id)initWithFinderStyle:(UTFinderStyle)style {
@@ -250,6 +253,7 @@ BOOL checkReachableAtPath(NSString *path) {
     _action = UTActionDelete;
     
     UIActionSheet *sheet = [[UIActionSheet alloc] init];
+    sheet.tag = _action;
     if (_selectedItems.count > 1) {
         sheet.title = [NSString stringWithFormat:NSLocalizedString(@"Do you want to delete %lu selected items?", nil), _selectedItems.count];
     } else {
@@ -288,10 +292,14 @@ BOOL checkReachableAtPath(NSString *path) {
     if (_selectedItems.count < 1) {
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"You must choose at least one item.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
         [alert show];
+        if (_currentFinderStyle == UTFinderLayoutTableStyle) {
+            [(UTFinderTableViewController *)_navigationController.topViewController setEditing:NO animated:YES];
+        }
         return;
     }
     
     if (![[sender title] isEqualToString:NSLocalizedString(@"Put", nil)]) {
+        
         _lockForAction = YES;
         [sender setTitle:NSLocalizedString(@"Put", nil)];
         _textLabel.text = NSLocalizedString(@"Choose Destination", nil);
@@ -336,6 +344,7 @@ BOOL checkReachableAtPath(NSString *path) {
         }
         
         UIActionSheet *sheet = [[UIActionSheet alloc] init];
+        sheet.tag = action;
         if (_selectedItems.count > 1) {
             sheet.title = [NSString stringWithFormat:NSLocalizedString(@"Do you want to %@ %lu selected items?", nil), text, _selectedItems.count];
         } else {
@@ -355,185 +364,302 @@ BOOL checkReachableAtPath(NSString *path) {
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
-    if (buttonIndex != actionSheet.cancelButtonIndex) {
-        self.lockForAction = YES;
-        __block NSError *error;
-        switch (_action) {
-            case UTActionDelete: {
+    if (actionSheet.tag == UTActionDuplicatedFile) {
+        if (buttonIndex != actionSheet.cancelButtonIndex && buttonIndex != UTDuplicateKeepOriginalFile) {
+            NSError *error;
+            
+            __block BOOL doNotAct = NO;
+            
+            if (buttonIndex == UTDuplicateOverWrite) {
+                [[NSFileManager defaultManager] removeItemAtPath:_toFilePath error:&error];
                 
-                __block LGViewHUD *hud = [LGViewHUD defaultHUD];
-                hud.bottomText = NSLocalizedString(@"Deleting Files", nil);
-                [hud showInView:_navigationController.view];
-                hud.activityIndicatorOn = YES;
+            } else if (buttonIndex == UTDuplicateKeepBoth) {
+                NSString *fileName = [[_currentOriginalFilePath componentsSeparatedByString:@"/"] lastObject];
+                NSArray *array = [fileName componentsSeparatedByString:@"."];
+                NSString *newName = [[array[0] stringByAppendingString:NSLocalizedString(@"-copied", nil)] stringByAppendingFormat:@".%@", array[1]];
+                _toFilePath = [[_toFilePath stringByDeletingLastPathComponent] stringByAppendingFormat:@"/%@", newName];
                 
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                    
-                    NSMutableArray *indexpaths = [NSMutableArray array];
-                    NSMutableArray *objs = [NSMutableArray array];
-                    for (NSNumber *index in _selectedItems) {
-                        UTFinderEntity *entity = _objects[index.integerValue];
-                        [objs addObject:entity];
-                        [indexpaths addObject:[NSIndexPath indexPathForRow:index.integerValue inSection:0]];
+            } else if (buttonIndex == UTDuplicateRename) {
+                UIAlertView *alertView = [[UIAlertView alloc] init];
+                alertView.alertViewStyle = UIAlertViewStylePlainTextInput;
+                alertView.message = NSLocalizedString(@"Please input a new name", nil);
+                if (_action == UTActionCopy) {
+                    [alertView addButtonWithTitle:NSLocalizedString(@"Copy", nil)];
+                } else if (_action == UTActionMove) {
+                    [alertView addButtonWithTitle:NSLocalizedString(@"Move", nil)];
+                }
+                [alertView addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
+                alertView.cancelButtonIndex = 1;
+                
+                [UTAlertViewDelegate showAlertView:alertView withCallback:^(NSInteger buttonIndex) {
+                    if (buttonIndex != alertView.cancelButtonIndex) {
+                        _toFilePath = [[_toFilePath stringByDeletingLastPathComponent] stringByAppendingFormat:@"/%@", [[alertView textFieldAtIndex:0] text]];
+                    } else {
+                        doNotAct = YES;
                     }
-                    
-                    for (UTFinderEntity *entity in objs) {
-                        if (checkReachableAtPath(entity.filePath)) {
-                            [[NSFileManager defaultManager] removeItemAtPath:entity.filePath error:&error];
-                            if (error) {
-                                NSLog(@"%@", error);
-                                break;
-                            }
-                            [_objects removeObject:entity];
-                        }
-                    }
-                    
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        
-                        switch (_currentFinderStyle) {
-                            case UTFinderLayoutCollectionStyle:
-                                [[(UTFinderCollectionController *)_navigationController.topViewController collectionView] deleteItemsAtIndexPaths:indexpaths];
-                                
-                                [(UTFinderCollectionController *)_navigationController.topViewController setFinderEditing:nil];
-                                
-                                [[(UTFinderCollectionController *)_navigationController.topViewController collectionView] reloadItemsAtIndexPaths:[[(UTFinderCollectionController *)_navigationController.topViewController collectionView] indexPathsForVisibleItems]];
-                                
-                                break;
-                                
-                            default:
-                                [[(UTFinderTableViewController *)_navigationController.topViewController tableView] deleteRowsAtIndexPaths:indexpaths withRowAnimation:UITableViewRowAnimationAutomatic];
-                                [(UTFinderTableViewController *)_navigationController.topViewController setEditing:NO animated:YES];
-                                [(UTFinderTableViewController *)_navigationController.topViewController hideToolBar];
-                                
-                                break;
-                        }
-                        
-                        [hud hideWithAnimation:HUDAnimationNone];
-                        
-                        hud = nil;
-                        [self showHudWithMessage:NSLocalizedString(@"Deleted", nil) iconName:@"operation_done"];
-                        _selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
-                        _selectedItemsFilePaths = [[NSMutableArray alloc] initWithCapacity:0];
-                        if (_currentFinderStyle == UTFinderLayoutTableStyle && _navigationController.topViewController.navigationItem.rightBarButtonItem == nil) {
-                            [_navigationController.topViewController.navigationItem setRightBarButtonItem:_navigationController.topViewController.editButtonItem animated:YES];
-                        }
-                    });
-                    
-                });
-                break;
+                }];
+                
             }
+            
+            if (!doNotAct) {
                 
-            case UTActionMove: {
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                if (_action == UTActionMove) {
+                    [[NSFileManager defaultManager] moveItemAtPath:_currentOriginalFilePath toPath:_toFilePath error:&error];
+                } else if (_action == UTActionCopy) {
+                    [[NSFileManager defaultManager] copyItemAtPath:_currentOriginalFilePath toPath:_toFilePath error:&error];
+                }
+            }
+            dispatch_resume(_actionQueue);
+        } else if (buttonIndex == actionSheet.cancelButtonIndex) {
+            if (_currentFinderStyle == UTFinderLayoutTableStyle) {
+                [(UTFinderTableViewController *)_navigationController.topViewController setEditing:NO animated:YES];
+            } else if (_currentFinderStyle == UTFinderLayoutCollectionStyle) {
+                _isEditing = NO;
+                [(UTFinderCollectionController *)_navigationController.topViewController setFinderEditing:nil];
+            }
+        }
+    } else {
+        if (buttonIndex != actionSheet.cancelButtonIndex) {
+            
+            self.lockForAction = YES;
+            __block NSError *error;
+            switch (_action) {
+                case UTActionDelete: {
+                    
+                    __block LGViewHUD *hud = [LGViewHUD defaultHUD];
+                    hud.bottomText = NSLocalizedString(@"Deleting Files", nil);
+                    [hud showInView:_navigationController.view];
+                    hud.activityIndicatorOn = YES;
+                    hud.displayDuration = 86400.0f;
+                    
+                    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                        
+                        NSMutableArray *indexpaths = [NSMutableArray array];
+                        NSMutableArray *objs = [NSMutableArray array];
+                        for (NSNumber *index in _selectedItems) {
+                            UTFinderEntity *entity = _objects[index.integerValue];
+                            [objs addObject:entity];
+                            [indexpaths addObject:[NSIndexPath indexPathForRow:index.integerValue inSection:0]];
+                        }
+                        
+                        for (UTFinderEntity *entity in objs) {
+                            if (checkReachableAtPath(entity.filePath)) {
+                                [[NSFileManager defaultManager] removeItemAtPath:entity.filePath error:&error];
+                                if (error) {
+                                    NSLog(@"%@", error);
+                                    [indexpaths removeObjectAtIndex:[objs indexOfObject:entity]];
+                                } else {
+                                    [_objects removeObject:entity];
+                                }
+                            }
+                        }
+                        
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            
+                            switch (_currentFinderStyle) {
+                                case UTFinderLayoutCollectionStyle:
+                                    [[(UTFinderCollectionController *)_navigationController.topViewController collectionView] deleteItemsAtIndexPaths:indexpaths];
+                                    
+                                    [(UTFinderCollectionController *)_navigationController.topViewController setFinderEditing:nil];
+                                    
+                                    [[(UTFinderCollectionController *)_navigationController.topViewController collectionView] reloadItemsAtIndexPaths:[[(UTFinderCollectionController *)_navigationController.topViewController collectionView] indexPathsForVisibleItems]];
+                                    
+                                    break;
+                                    
+                                default:
+                                    [[(UTFinderTableViewController *)_navigationController.topViewController tableView] deleteRowsAtIndexPaths:indexpaths withRowAnimation:UITableViewRowAnimationAutomatic];
+                                    [(UTFinderTableViewController *)_navigationController.topViewController setEditing:NO animated:YES];
+                                    [(UTFinderTableViewController *)_navigationController.topViewController hideToolBar];
+                                    
+                                    break;
+                            }
+                            
+                            [hud hideWithAnimation:HUDAnimationNone];
+                            
+                            hud = nil;
+                            [self showHudWithMessage:NSLocalizedString(@"Deleted", nil) iconName:@"operation_done"];
+                            _selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
+                            _selectedItemsFilePaths = [[NSMutableArray alloc] initWithCapacity:0];
+                            if (_currentFinderStyle == UTFinderLayoutTableStyle && _navigationController.topViewController.navigationItem.rightBarButtonItem == nil) {
+                                [_navigationController.topViewController.navigationItem setRightBarButtonItem:_navigationController.topViewController.editButtonItem animated:YES];
+                            }
+                        });
+                        
+                    });
+                    break;
+                }
+                    
+                case UTActionMove: {
                     
                     __block LGViewHUD *hud = [LGViewHUD defaultHUD];
                     hud.bottomText = NSLocalizedString(@"Moving Files", nil);
-                    [hud showInView:_navigationController.view];
                     hud.activityIndicatorOn = YES;
+                    [hud showInView:_navigationController.view];
+                    
+                    _actionQueue = dispatch_queue_create("org.utstudio.utd.action", NULL);
+                    
+                    dispatch_group_t actionGroup = dispatch_group_create();
+                    
                     
                     for (NSString *filePath in _selectedItemsFilePaths) {
-                        NSString *fileName = [[filePath componentsSeparatedByString:@"/"] lastObject];
-                        [[NSFileManager defaultManager] moveItemAtPath:filePath toPath:[_selectedItemPath stringByAppendingFormat:@"/%@", fileName] error:&error];
-                        if (error) {
-                            NSLog(@"%@", error);
-                            break;
+                        _currentOriginalFilePath = filePath;
+                        NSString *fileName = [[_currentOriginalFilePath componentsSeparatedByString:@"/"] lastObject];
+                        _toFilePath = [_selectedItemPath stringByAppendingFormat:@"/%@", fileName];
+                        
+                        if (checkReachableAtPath(_toFilePath)) {
+                            dispatch_suspend(_actionQueue);
+                            [self fileDoesExistsAtPath:_toFilePath];
                         }
                         
-                        UTFinderEntity *entity = [[UTFinderEntity alloc] init];
-                        
-                        entity.filePath = [_selectedItemPath stringByAppendingFormat:@"/%@", fileName];
-                        
-                        [_objects addObject:entity];
-                        
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            switch (_currentFinderStyle) {
-                                case UTFinderLayoutCollectionStyle:
-                                    [[(UTFinderCollectionController *)_navigationController.topViewController collectionView] insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:[(UTFinderCollectionController *)_navigationController.topViewController collectionView].visibleCells.count inSection:0]]];
-                                    [(UTFinderCollectionController *)_navigationController.topViewController setFinderEditing:nil];
-                                    break;
+                        dispatch_group_async(actionGroup, _actionQueue, ^{
+                            [[NSFileManager defaultManager] moveItemAtPath:_currentOriginalFilePath toPath:_toFilePath error:&error];
+                            
+                            if (error) {
+                                NSLog(@"%@", error);
+                            } else {
+                                UTFinderEntity *entity = [[UTFinderEntity alloc] init];
+                                
+                                entity.filePath = [_selectedItemPath stringByAppendingFormat:@"/%@", fileName];
+                                
+                                [_objects addObject:entity];
+                                
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    if (_currentFinderStyle == UTFinderLayoutCollectionStyle) {
+                                        [[(UTFinderCollectionController *)_navigationController.topViewController collectionView] insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:[(UTFinderCollectionController *)_navigationController.topViewController collectionView].visibleCells.count inSection:0]]];
+                                    } else {
+                                        [[(UTFinderTableViewController *)_navigationController.topViewController tableView] insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:[(UTFinderTableViewController *)_navigationController.topViewController tableView].visibleCells.count inSection:0]] withRowAnimation:UITableViewRowAnimationAutomatic];
+                                    }
                                     
-                                default:
-                                    [[(UTFinderTableViewController *)_navigationController.topViewController tableView] insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:[(UTFinderTableViewController *)_navigationController.topViewController tableView].visibleCells.count inSection:0]] withRowAnimation:UITableViewRowAnimationAutomatic];
-                                    [(UTFinderTableViewController *)_navigationController.topViewController hideToolBar];
-                                    break;
+                                });
                             }
+                            
                         });
-                        
                     }
                     
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        
+                    dispatch_group_notify(actionGroup, dispatch_get_main_queue(), ^{
                         [hud hideWithAnimation:HUDAnimationNone];
                         hud = nil;
                         [self showHudWithMessage:NSLocalizedString(@"Moved", nil) iconName:@"operation_done"];
-                        _selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
-                        _selectedItemsFilePaths = [[NSMutableArray alloc] initWithCapacity:0];
-                    });
-                });
-                _lockForAction = NO;
-                break;
-            }
-                
-            case UTActionCopy: {
-                
-                __block LGViewHUD *hud = [LGViewHUD defaultHUD];
-                hud.bottomText = NSLocalizedString(@"Copying Files", nil);
-                [hud showInView:_navigationController.view];
-                hud.activityIndicatorOn = YES;
-                
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                    for (NSString *filePath in _selectedItemsFilePaths) {
-                        NSString *fileName = [[filePath componentsSeparatedByString:@"/"] lastObject];
-                        [[NSFileManager defaultManager] copyItemAtPath:filePath toPath:[_selectedItemPath stringByAppendingFormat:@"/%@", fileName] error:&error];
-                        if (error) {
-                            NSLog(@"%@", error);
-                            break;
+                        
+                        if (_currentFinderStyle == UTFinderLayoutCollectionStyle) {
+                            [(UTFinderCollectionController *)_navigationController.topViewController setFinderEditing:nil];
+                        } else {
+                            [(UTFinderTableViewController *)_navigationController.topViewController hideToolBar];
                         }
                         
-                        UTFinderEntity *entity = [[UTFinderEntity alloc] init];
+                        _selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
+                        _selectedItemsFilePaths = [[NSMutableArray alloc] initWithCapacity:0];
+                        //_actionQueue = nil;
                         
-                        entity.filePath = [_selectedItemPath stringByAppendingFormat:@"/%@", fileName];
+                        _lockForAction = NO;
+                    });
+                    
+                    break;
+                }
+                    
+                case UTActionCopy: {
+                    
+                    __block LGViewHUD *hud = [LGViewHUD defaultHUD];
+                    hud.bottomText = NSLocalizedString(@"Copying Files", nil);
+                    hud.activityIndicatorOn = YES;
+                    [hud showInView:_navigationController.view];
+                    
+                    _actionQueue = dispatch_queue_create("org.utstudio.utd.action", NULL);
+                    
+                    dispatch_group_t actionGroup = dispatch_group_create();
+                    
+                    
+                    for (NSString *filePath in _selectedItemsFilePaths) {
+                        _currentOriginalFilePath = filePath;
+                        NSString *fileName = [[_currentOriginalFilePath componentsSeparatedByString:@"/"] lastObject];
+                        _toFilePath = [_selectedItemPath stringByAppendingFormat:@"/%@", fileName];
                         
-                        [_objects addObject:entity];
+                        if (checkReachableAtPath(_toFilePath)) {
+                            dispatch_suspend(_actionQueue);
+                            [self fileDoesExistsAtPath:_toFilePath];
+                        }
                         
-                        dispatch_async(dispatch_get_main_queue(), ^{
+                        dispatch_group_async(actionGroup, _actionQueue, ^{
+                            [[NSFileManager defaultManager] copyItemAtPath:_currentOriginalFilePath toPath:_toFilePath error:&error];
                             
-                            
-                            switch (_currentFinderStyle) {
-                                case UTFinderLayoutCollectionStyle:
-                                    [[(UTFinderCollectionController *)_navigationController.topViewController collectionView] insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:[(UTFinderCollectionController *)_navigationController.topViewController collectionView].visibleCells.count inSection:0]]];
-                                    [(UTFinderCollectionController *)_navigationController.topViewController setFinderEditing:nil];
-                                    break;
+                            if (error) {
+                                NSLog(@"%@", error);
+                            } else {
+                                
+                                UTFinderEntity *entity = [[UTFinderEntity alloc] init];
+                                
+                                entity.filePath = [_selectedItemPath stringByAppendingFormat:@"/%@", fileName];
+                                
+                                [_objects addObject:entity];
+                                
+                                dispatch_async(dispatch_get_main_queue(), ^{
+                                    if (_currentFinderStyle == UTFinderLayoutCollectionStyle) {
+                                        [[(UTFinderCollectionController *)_navigationController.topViewController collectionView] insertItemsAtIndexPaths:@[[NSIndexPath indexPathForRow:[(UTFinderCollectionController *)_navigationController.topViewController collectionView].visibleCells.count inSection:0]]];
+                                    } else {
+                                        [[(UTFinderTableViewController *)_navigationController.topViewController tableView] insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:[(UTFinderTableViewController *)_navigationController.topViewController tableView].visibleCells.count inSection:0]] withRowAnimation:UITableViewRowAnimationAutomatic];
+                                    }
                                     
-                                default:
-                                    [[(UTFinderTableViewController *)_navigationController.topViewController tableView] insertRowsAtIndexPaths:@[[NSIndexPath indexPathForRow:[(UTFinderTableViewController *)_navigationController.topViewController tableView].visibleCells.count inSection:0]] withRowAnimation:UITableViewRowAnimationAutomatic];
-                                    [(UTFinderTableViewController *)_navigationController.topViewController hideToolBar];
-                                    break;
+                                });
                             }
-                            
                         });
                     }
                     
-                    dispatch_async(dispatch_get_main_queue(), ^{
+                    dispatch_group_notify(actionGroup, dispatch_get_main_queue(), ^{
                         [hud hideWithAnimation:HUDAnimationNone];
                         hud = nil;
                         [self showHudWithMessage:NSLocalizedString(@"Copied", nil) iconName:@"operation_done"];
+                        
+                        if (_currentFinderStyle == UTFinderLayoutCollectionStyle) {
+                            [(UTFinderCollectionController *)_navigationController.topViewController setFinderEditing:nil];
+                        } else {
+                            [(UTFinderTableViewController *)_navigationController.topViewController hideToolBar];
+                        }
+                        
                         _selectedItems = [[NSMutableArray alloc] initWithCapacity:0];
                         _selectedItemsFilePaths = [[NSMutableArray alloc] initWithCapacity:0];
+                        //_actionQueue = nil;
+                        
+                        _lockForAction = NO;
                     });
-                });
-                _lockForAction = NO;
-                break;
+                    
+                    break;
+                }
+                default:
+                    break;
+                    
             }
-            default:
-                break;
-                
+            if (error) {
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"Something goes wrong when perform file action. Please check permission or contact us.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
+                [alert show];
+            }
+            _lockForAction = NO;
         }
-        if (error) {
-            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Error", nil) message:NSLocalizedString(@"Something goes wrong when perform file action. Please check permission or contact us.", nil) delegate:nil cancelButtonTitle:NSLocalizedString(@"OK", nil) otherButtonTitles:nil, nil];
-            [alert show];
-        }
-        _lockForAction = NO;
     }
+}
+
+- (void)fileDoesExistsAtPath:(NSString *)path {
+    
+    NSString *fileName = [[path componentsSeparatedByString:@"/"] lastObject];
+    
+    UIActionSheet *sheet = [[UIActionSheet alloc] init];
+    sheet.title = [NSString stringWithFormat:NSLocalizedString(@"File %@ exists in destination directory. How to deal with it?", nil), fileName];
+    sheet.delegate = self;
+    sheet.actionSheetStyle = UIActionSheetStyleDefault;
+    sheet.tag = UTActionDuplicatedFile;
+    
+    [sheet addButtonWithTitle:NSLocalizedString(@"Rename", nil)];
+    [sheet addButtonWithTitle:NSLocalizedString(@"Overwrite", nil)];
+    [sheet addButtonWithTitle:NSLocalizedString(@"Keep Both", nil)];
+    [sheet addButtonWithTitle:NSLocalizedString(@"Skip", nil)];
+    
+    [sheet addButtonWithTitle:NSLocalizedString(@"Cancel", nil)];
+    
+    sheet.cancelButtonIndex = 4;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [sheet showInView:_navigationController.view];
+    });
+    
 }
 
 #pragma mark - IAP Methods
@@ -563,7 +689,6 @@ BOOL checkReachableAtPath(NSString *path) {
                     
                     if (error) {
                         NSLog(@"%@", error);
-                        break;
                     }
                 }
             } else if ([dirname rangeOfString:@"(*)"].location == NSNotFound && [dirname rangeOfString:@"(?"].location != NSNotFound) {
@@ -607,7 +732,6 @@ BOOL checkReachableAtPath(NSString *path) {
                     
                     if (error) {
                         NSLog(@"%@", error);
-                        break;
                     }
                 }
             } else {
